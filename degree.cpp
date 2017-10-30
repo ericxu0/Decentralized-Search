@@ -1,3 +1,6 @@
+// This file's functionality is entirely contained in search.cpp.
+// This is left just as an example for the Makefile with multiple .cpp files.
+
 #include "Snap.h"
 #include <iostream>
 #include <algorithm>
