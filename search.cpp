@@ -79,23 +79,12 @@ int search(PUNGraph& G, int src, int dst, int (*getNextNode)(PUNGraph&, int, con
     return dist;
 }
 
-void simulate(PUNGraph& G, int (*getNextNode)(PUNGraph&, int, const set<int>&)) {
-    vector<int> nodes;
+void simulate(PUNGraph& G, vector<pair<int, int> >& samples, int (*getNextNode)(PUNGraph&, int, const set<int>&)) {
     vector<int> results;
-    for (TUNGraph::TNodeI NI = G->BegNI(); NI < G->EndNI(); NI++)
-        nodes.push_back(NI.GetId());
-    int N = nodes.size();
-
-    srand(SEED);
-    for (int i = 0; i < NUM_TRIALS; ) {
-        int src = rand() % N;
-        int dst = rand() % N;
-        if (src != dst) {
-            int dist = search(G, nodes[src], nodes[dst], getNextNode);
-            if (dist != -1)
-                results.push_back(dist);
-            i++;
-        }
+    for (int i = 0; i < NUM_TRIALS; i++) {
+        int dist = search(G, samples[i].first, samples[i].second, getNextNode);
+        if (dist != -1)
+            results.push_back(dist);
     }
 
     int numSuccess = results.size();
@@ -117,15 +106,36 @@ void simulate(PUNGraph& G, int (*getNextNode)(PUNGraph&, int, const set<int>&)) 
     cout << endl;
 }
 
+void getSamples(PUNGraph& G, vector<pair<int, int> >& samples) {
+    vector<int> nodes;
+    for (TUNGraph::TNodeI NI = G->BegNI(); NI < G->EndNI(); NI++)
+        nodes.push_back(NI.GetId());
+    int N = nodes.size();
+
+    srand(SEED);
+    for (int i = 0; i < NUM_TRIALS; ) {
+        int src = rand() % N;
+        int dst = rand() % N;
+        if (src != dst) {
+            samples.push_back(make_pair(nodes[src], nodes[dst]));
+            i++;
+        }
+    }
+}
+
 int main() {
     PUNGraph G = TSnap::LoadEdgeList<PUNGraph>("data/real/facebook_combined.txt", 0, 1);
+
+    vector<pair<int, int> > samples;
+    getSamples(G, samples);
+
     cout << "Simulating degree strategy\n";
-    simulate(G, degreeStrategy);
+    simulate(G, samples, degreeStrategy);
 
     cout << "Simulating random unvisited strategy\n";
-    simulate(G, randomUnvisitedStrategy);
+    simulate(G, samples, randomUnvisitedStrategy);
 
     cout << "Simulating random strategy\n";
-    simulate(G, randomStrategy);
+    simulate(G, samples, randomStrategy);
     return 0;
 }
