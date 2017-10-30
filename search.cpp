@@ -68,6 +68,10 @@ int search(PUNGraph& G, int src, int dst, int (*getNextNode)(PUNGraph&, int, con
     set<int> visited;
     while (cur != dst) {
         visited.insert(cur);
+        
+        if (G->IsEdge(cur, dst))
+            return dist + 1;
+        
         int nxt = getNextNode(G, cur, visited);
         if (nxt == -1)
             return -1;
