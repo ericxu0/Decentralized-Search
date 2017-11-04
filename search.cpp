@@ -9,8 +9,8 @@ using namespace std;
 
 const int NUM_TRIALS = 1000;
 const int SEED = 42;
-const int CAP = 1000 * 1000;
-const int BUCKETS[] = {10, 30, 100, 300, 1000, 3000, 10000};
+const int CAP = 100 * 1000;
+const int BUCKETS[] = {10, 100, 1000, 10000};
 
 // Returns a random neighbor, or -1 if there are none.
 int randomNeighbor(TUNGraph::TNodeI NI) {
@@ -83,14 +83,7 @@ int search(PUNGraph& G, int src, int dst, int (*getNextNode)(PUNGraph&, int, con
     return dist;
 }
 
-void simulate(PUNGraph& G, vector<pair<int, int> >& samples, int (*getNextNode)(PUNGraph&, int, const set<int>&)) {
-    vector<int> results;
-    for (int i = 0; i < NUM_TRIALS; i++) {
-        int dist = search(G, samples[i].first, samples[i].second, getNextNode);
-        if (dist != -1)
-            results.push_back(dist);
-    }
-
+void displayResults(vector<int>& results) {
     int numSuccess = results.size();
     int totalPathLength = accumulate(results.begin(), results.end(), 0);
     
@@ -110,6 +103,26 @@ void simulate(PUNGraph& G, vector<pair<int, int> >& samples, int (*getNextNode)(
     cout << endl;
 }
 
+void simulate(PUNGraph& G, vector<pair<int, int> >& samples, int (*getNextNode)(PUNGraph&, int, const set<int>&)) {
+    vector<int> results;
+    for (size_t i = 0; i < samples.size(); i++) {
+        int dist = search(G, samples[i].first, samples[i].second, getNextNode);
+        if (dist != -1)
+            results.push_back(dist);
+    }
+    displayResults(results);
+}
+
+void optimal(PUNGraph& G, vector<pair<int, int> >& samples) {
+    vector<int> results;
+    for (size_t i = 0; i < samples.size(); i++) {
+        int dist = TSnap::GetShortPath(G, samples[i].first, samples[i].second);
+        if (dist != -1)
+            results.push_back(dist);
+    }
+    displayResults(results);
+}
+
 void getSamples(PUNGraph& G, vector<pair<int, int> >& samples) {
     vector<int> nodes;
     for (TUNGraph::TNodeI NI = G->BegNI(); NI < G->EndNI(); NI++)
@@ -118,17 +131,24 @@ void getSamples(PUNGraph& G, vector<pair<int, int> >& samples) {
 
     srand(SEED);
     for (int i = 0; i < NUM_TRIALS; ) {
-        int src = rand() % N;
-        int dst = rand() % N;
+        int src = nodes[rand() % N];
+        int dst = nodes[rand() % N];
         if (src != dst) {
-            samples.push_back(make_pair(nodes[src], nodes[dst]));
+            samples.push_back(make_pair(src, dst));
             i++;
         }
     }
 }
 
-int main() {
-    PUNGraph G = TSnap::LoadEdgeList<PUNGraph>("data/real/facebook_combined.txt", 0, 1);
+void experiment(const string& filename) {
+    cout << "Running experiment on " << filename << endl;
+    PUNGraph G = TSnap::LoadEdgeList<PUNGraph>(filename.c_str(), 0, 1);
+    cout << "# Nodes: " << G->GetNodes() << endl;
+    cout << "# Edges: " << G->GetEdges() << endl;
+    G = TSnap::GetMxWcc(G);
+    cout << "# Nodes (Max WCC): " << G->GetNodes() << endl;
+    cout << "# Edges (Max WCC): " << G->GetEdges() << endl;
+    cout << endl;
 
     vector<pair<int, int> > samples;
     getSamples(G, samples);
@@ -141,5 +161,21 @@ int main() {
 
     cout << "Simulating random strategy\n";
     simulate(G, samples, randomStrategy);
+
+    cout << "Optimal\n";
+    optimal(G, samples);
+
+    cout << endl;
+}
+
+int main() {
+    experiment("data/real/facebook_combined.txt");
+    experiment("data/real/ca-HepTh.txt");
+    experiment("data/real/cit-HepTh.txt");
+
+    experiment("data/synthetic/gnm0.txt");
+    experiment("data/synthetic/smallworld0.txt");
+    experiment("data/synthetic/prefattach0.txt");
+
     return 0;
 }

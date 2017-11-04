@@ -1,6 +1,6 @@
 include ../../Makefile.config
 
-TARGETS=search degree
+TARGETS=search degree create_graphs
 CXXFLAGS2 = $(filter-out -std=c++98,$(CXXFLAGS))
 CXXFLAGS2 += -std=c++11
 
@@ -10,4 +10,4 @@ all: $(TARGETS)
 	$(CC) $(CXXFLAGS2) -o $@ $< $(DEPCPP) $(EXSNAP)/Snap.o -I$(EXSNAP) -I$(EXSNAPADV) -I$(EXGLIB) -I$(EXSNAPEXP) $(LDFLAGS) $(LIBS)
 
 clean:
-	rm -f *.o $(TARGETS)
+	rm -f *.o $(TARGETS) *.Err
