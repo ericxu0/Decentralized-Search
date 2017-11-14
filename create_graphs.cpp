@@ -8,8 +8,8 @@ const int NUM = 3;
 
 const int V = 10000;       // Vertices
 const int E = 100000;      // Edges for Gnm
-const int Vsmall = 1000;       // Vertices
-const int Esmall = 10000;      // Edges for Gnm
+const int Vsmall = 20;       // Vertices
+const int Esmall = 50;      // Edges for Gnm
 const int EXP = 2;         // Power law exponent
 const int OUT_DEG = 10;    // Out-degree for Small World and Preferential Attachment
 const double REWIRE = 0.5; // Rewire probability for Small World
