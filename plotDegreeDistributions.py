@@ -41,6 +41,7 @@ def plotGraphs():
 
     erdosRenyi = snap.LoadEdgeList(snap.PUNGraph, "data/synthetic/gnm0.txt", 0, 1)
     smallWorld = snap.LoadEdgeList(snap.PUNGraph, "data/synthetic/smallworld0.txt", 0, 1)
+    powerLaw = snap.LoadEdgeList(snap.PUNGraph, "data/synthetic/powerlaw0.txt", 0, 1)
     prefAttachment = snap.LoadEdgeList(snap.PUNGraph, "data/synthetic/prefattach0.txt", 0, 1)
 
     x_facebook, y_facebook = getDataPointsToPlot(facebookNet)
@@ -57,6 +58,9 @@ def plotGraphs():
 
     x_smallworld, y_smallworld = getDataPointsToPlot(smallWorld)
     plt.loglog(x_smallworld, y_smallworld, color = 'c', label = 'Small World Network')
+
+    x_powerlaw, y_powerlaw = getDataPointsToPlot(smallWorld)
+    plt.loglog(x_powerlaw, y_powerlaw, color = 'm', label = 'Power Law Network')
 
     x_prefAttachment, y_prefAttachment = getDataPointsToPlot(prefAttachment)
     plt.loglog(x_prefAttachment, y_prefAttachment, color = 'k', label = 'Preferential Attachment Network')
