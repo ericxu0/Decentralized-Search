@@ -52,7 +52,7 @@ void generateSpectralEmbeddings(PUNGraph& G) {
     }
     
     for (map<int, int>::iterator it = nodeIdxToMatrixIdx.begin(); it != nodeIdxToMatrixIdx.end(); it++)
-        spectral_embeddings[it->second] = make_pair(eigs.eigenvectors()(it->first, 1), eigs.eigenvectors()(it->first, 0));
+        spectral_embeddings[it->first] = make_pair(eigs.eigenvectors()(it->second, 1), eigs.eigenvectors()(it->second, 0));
 
     //cout << eigs.eigenvalues() << endl;
     //cout << eigs.eigenvectors() << endl;
