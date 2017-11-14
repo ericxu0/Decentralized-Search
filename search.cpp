@@ -96,6 +96,7 @@ double getNode2VecDist(int a, int b) {
     for (int i = 0; i < pa.size(); i++)
         ret += (pa[i] - pb[i])*(pa[i] - pb[i]);
     return sqrt(ret);
+}
 
 int getRandomNumber(int starting, int numberValues) {
     return rand() % (numberValues + 1) + starting;

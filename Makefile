@@ -1,6 +1,6 @@
 include ../../Makefile.config
 
-TARGETS=search degree create_graphs
+TARGETS=search degree create_graphs spectral
 CXXFLAGS2 = $(filter-out -std=c++98,$(CXXFLAGS))
 CXXFLAGS2 += -std=c++11
 
