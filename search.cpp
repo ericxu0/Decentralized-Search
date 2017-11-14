@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/SparseCore>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <map>
@@ -19,9 +20,10 @@ const int SEED = 42;
 const int CAP = 100 * 1000;
 const int BUCKETS[] = {10, 100, 1000, 10000};
 
-map<int, pair<double, double> > embeddings;
+map<int, pair<double, double> > spectral_embeddings;
+map<int, vector<double> > node2vec_embeddings;
 
-void generate_spectral_embeddings(PUNGraph& G) {
+void generateSpectralEmbeddings(PUNGraph& G) {
     map<int, int> nodeIdxToMatrixIdx;
     int index = 0;
     for (TUNGraph::TNodeI NI = G->BegNI(); NI < G->EndNI(); NI++)
@@ -40,21 +42,37 @@ void generate_spectral_embeddings(PUNGraph& G) {
     }
 
     SparseSymMatProd<double> op(laplacian);
-    SymEigsSolver<double, SMALLEST_MAGN, SparseSymMatProd<double> > eigs(&op, 3, N/2);
+    SymEigsSolver<double, SMALLEST_MAGN, SparseSymMatProd<double> > eigs(&op, 3, N/3);
 
     eigs.init();
     int nconv = eigs.compute();
-    if (eigs.info() != SUCCESSFUL)
-    {
-        cout << "could not compute eigenvectors\n";
+    if (eigs.info() != SUCCESSFUL) {
+        cout << "Could not compute eigenvectors.\n";
         return;
     }
     
     for (map<int, int>::iterator it = nodeIdxToMatrixIdx.begin(); it != nodeIdxToMatrixIdx.end(); it++)
-        embeddings[it->second] = make_pair(eigs.eigenvectors()(it->first, 1), eigs.eigenvectors()(it->first, 0));
+        spectral_embeddings[it->second] = make_pair(eigs.eigenvectors()(it->first, 1), eigs.eigenvectors()(it->first, 0));
 
     //cout << eigs.eigenvalues() << endl;
     //cout << eigs.eigenvectors() << endl;
+}
+
+void generateNode2vecEmbeddings(const string& filename) {
+    string embedding_file = filename.substr(0, filename.size() - 4) + ".emb";
+    ifstream fin(embedding_file);
+    int N, D;
+    fin >> N >> D;
+    for (int i = 0, id; i < N; i++) {
+        fin >> id;
+        vector<double>& v = node2vec_embeddings[id];
+        for (int j = 0; j < D; j++) {
+            double val;
+            fin >> val;
+            v.push_back(val);
+        }
+    }
+    fin.close();
 }
 
 // Returns a random neighbor, or -1 if there are none.
@@ -64,10 +82,19 @@ int randomNeighbor(TUNGraph::TNodeI NI) {
     return NI.GetOutNId(rand() % NI.GetOutDeg());
 }
 
-double getDist(int a, int b) {
-    pair<double, double> pa = embeddings[a];
-    pair<double, double> pb = embeddings[b];
+double getSpectralDist(int a, int b) {
+    pair<double, double> pa = spectral_embeddings[a];
+    pair<double, double> pb = spectral_embeddings[b];
     return sqrt((pa.first - pb.first)*(pa.first - pb.first) + (pa.second - pb.second)*(pa.second - pb.second));
+}
+
+double getNode2VecDist(int a, int b) {
+    double ret = 0.0;
+    vector<double>& pa = node2vec_embeddings[a];
+    vector<double>& pb = node2vec_embeddings[b];
+    for (int i = 0; i < pa.size(); i++)
+        ret += (pa[i] - pb[i])*(pa[i] - pb[i]);
+    return sqrt(ret);
 }
 
 int spectralStrategy(PUNGraph& G, int cur, int dst, const set<int>& visited) {
@@ -76,9 +103,27 @@ int spectralStrategy(PUNGraph& G, int cur, int dst, const set<int>& visited) {
     double dist = 1E23;
     for (int i = 0; i < NI.GetOutDeg(); i++) {
         int nxt = NI.GetOutNId(i);
-        if (visited.find(nxt) == visited.end() && dist > getDist(nxt, dst)) {
+        double d = getSpectralDist(nxt, dst);
+        if (visited.find(nxt) == visited.end() && dist > d) {
             best = nxt;
-            dist = getDist(nxt, dst);
+            dist = d;
+        }
+    }
+    if (best == -1)
+        return randomNeighbor(NI);
+    return best;
+}
+
+int node2vecStrategy(PUNGraph& G, int cur, int dst, const set<int>& visited) {
+    TUNGraph::TNodeI NI = G->GetNI(cur);
+    int best = -1;
+    double dist = 1E23;
+    for (int i = 0; i < NI.GetOutDeg(); i++) {
+        int nxt = NI.GetOutNId(i);
+        double d = getNode2VecDist(nxt, dst);
+        if (visited.find(nxt) == visited.end() && dist > d) {
+            best = nxt;
+            dist = d;
         }
     }
     if (best == -1)
@@ -142,6 +187,7 @@ int search(PUNGraph& G, int src, int dst, int (*getNextNode)(PUNGraph&, int, con
         
         int nxt = getNextNode(G, cur, visited);
         //int nxt = spectralStrategy(G, cur, dst, visited);
+        //int nxt = node2vecStrategy(G, cur, dst, visited);
         if (nxt == -1)
             return -1;
         cur = nxt;
@@ -219,8 +265,10 @@ void experiment(const string& filename) {
     cout << "# Edges (Max WCC): " << G->GetEdges() << endl;
     cout << endl;
 
-    embeddings.clear();
-    generate_spectral_embeddings(G);
+    spectral_embeddings.clear();
+    //generateSpectralEmbeddings(G);
+    node2vec_embeddings.clear();
+    generateNode2vecEmbeddings(filename);
 
     vector<pair<int, int> > samples;
     getSamples(G, samples);
@@ -241,17 +289,17 @@ void experiment(const string& filename) {
 }
 
 int main() {
-    //experiment("data/real/facebook_combined.txt");
-    //experiment("data/real/ca-HepTh.txt");
-    //experiment("data/real/cit-HepTh.txt");
+    experiment("data/real/facebook_combined.txt");
+    experiment("data/real/ca-HepTh.txt");
+    experiment("data/real/cit-HepTh.txt");
 
-    //experiment("data/synthetic/gnm0.txt");
-    //experiment("data/synthetic/smallworld0.txt");
-    //experiment("data/synthetic/prefattach0.txt");
+    experiment("data/synthetic/gnm0.txt");
+    experiment("data/synthetic/smallworld0.txt");
+    experiment("data/synthetic/prefattach0.txt");
     
-    experiment("data/synthetic/gnm_small0.txt");
-    experiment("data/synthetic/smallworld_small0.txt");
-    experiment("data/synthetic/prefattach_small0.txt");
+    //experiment("data/synthetic/gnm_small0.txt");
+    //experiment("data/synthetic/smallworld_small0.txt");
+    //experiment("data/synthetic/prefattach_small0.txt");
 
     return 0;
 }
