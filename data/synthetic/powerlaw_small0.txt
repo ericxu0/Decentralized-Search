@@ -1,0 +1,19 @@
+# Undirected graph (each unordered pair of nodes is saved once): data/synthetic/powerlaw_small0.txt
+# Nodes: 20 Edges: 16
+# NodeId	NodeId
+0	1
+0	3
+0	6
+0	11
+1	2
+1	5
+2	5
+2	16
+3	8
+4	13
+4	14
+6	10
+7	12
+7	19
+9	17
+15	18

@@ -10,7 +10,7 @@ const int V = 10000;       // Vertices
 const int E = 100000;      // Edges for Gnm
 const int Vsmall = 20;       // Vertices
 const int Esmall = 50;      // Edges for Gnm
-const int EXP = 2;         // Power law exponent
+const double EXP = 2.6;         // Power law exponent
 const int OUT_DEG = 10;    // Out-degree for Small World and Preferential Attachment
 const double REWIRE = 0.5; // Rewire probability for Small World
 
@@ -42,11 +42,11 @@ void create(const string& name, bool small, PUNGraph (*newGraph)(TRnd&, bool)) {
 
 int main() {
     create("gnm", 0, gnm);
-    //create("powerlaw", 0, powerlaw); // This doesn't work for some reason?
+    create("powerlaw", 0, powerlaw); // This doesn't work for some reason?
     create("smallworld", 0, smallworld);
     create("prefattach", 0, prefattach);
     create("gnm_small", 1, gnm);
-    //create("powerlaw_small", 1, powerlaw); // This doesn't work for some reason?
+    create("powerlaw_small", 1, powerlaw); // This doesn't work for some reason?
     create("smallworld_small", 1, smallworld);
     create("prefattach_small", 1, prefattach);
 
