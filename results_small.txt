@@ -1,0 +1,139 @@
+Running experiment on data/synthetic/gnm_small0.txt
+# Nodes: 100
+# Edges: 1000
+# Nodes (Max WCC): 100
+# Edges (Max WCC): 1000
+
+Simulating degree strategy
+Success rate: 100%
+Average path length: 3.344
+
+Simulating random unvisited strategy
+Success rate: 100.0%
+Average path length: 4.9
+
+Simulating random strategy
+Success rate: 100.0%
+Average path length: 5.1
+
+Simulating random degree weighting strategy
+Success rate: 100.0%
+Average path length: 4.8
+
+Simulating spectral strategy
+Success rate: 100%
+Average path length: 3.765
+
+Simulating node2vec strategy
+Success rate: 100%
+Average path length: 4.429
+
+Optimal
+Success rate: 100.0%
+Average path length: 1.8
+
+
+Running experiment on data/synthetic/smallworld_small0.txt
+# Nodes: 100
+# Edges: 943
+# Nodes (Max WCC): 100
+# Edges (Max WCC): 943
+
+Simulating degree strategy
+Success rate: 100.0%
+Average path length: 4.5
+
+Simulating random unvisited strategy
+Success rate: 100.0%
+Average path length: 5.5
+
+Simulating random strategy
+Success rate: 100.0%
+Average path length: 5.7
+
+Simulating random degree weighting strategy
+Success rate: 100.0%
+Average path length: 5.1
+
+Simulating spectral strategy
+Success rate: 100.0%
+Average path length: 2.8
+
+Simulating node2vec strategy
+Success rate: 100.0%
+Average path length: 7.0
+
+Optimal
+Success rate: 100.0%
+Average path length: 1.8
+
+
+Running experiment on data/synthetic/powerlaw_small0.txt
+# Nodes: 100
+# Edges: 140
+# Nodes (Max WCC): 89
+# Edges (Max WCC): 134
+
+Simulating degree strategy
+Success rate: 100.0%
+Average path length: 26.4
+
+Simulating random unvisited strategy
+Success rate: 100.0%
+Average path length: 35.8
+
+Simulating random strategy
+Success rate: 100.0%
+Average path length: 88.8
+
+Simulating random degree weighting strategy
+Success rate: 100.0%
+Average path length: 29.1
+
+Simulating spectral strategy
+Success rate: 100.0%
+Average path length: 8.0
+
+Simulating node2vec strategy
+Success rate: 100.0%
+Average path length: 26.4
+
+Optimal
+Success rate: 100.0%
+Average path length: 3.2
+
+
+Running experiment on data/synthetic/prefattach_small0.txt
+# Nodes: 100
+# Edges: 945
+# Nodes (Max WCC): 100
+# Edges (Max WCC): 945
+
+Simulating degree strategy
+Success rate: 100.0%
+Average path length: 3.4
+
+Simulating random unvisited strategy
+Success rate: 100.0%
+Average path length: 5.2
+
+Simulating random strategy
+Success rate: 100.0%
+Average path length: 5.6
+
+Simulating random degree weighting strategy
+Success rate: 100.0%
+Average path length: 4.4
+
+Simulating spectral strategy
+Success rate: 100.0%
+Average path length: 3.7
+
+Simulating node2vec strategy
+Success rate: 100.0%
+Average path length: 3.9
+
+Optimal
+Success rate: 100.0%
+Average path length: 1.9
+
