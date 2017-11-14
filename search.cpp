@@ -45,7 +45,7 @@ void generateSpectralEmbeddings(PUNGraph& G) {
     SymEigsSolver<double, SMALLEST_MAGN, SparseSymMatProd<double> > eigs(&op, 3, N/3);
 
     eigs.init();
-    int nconv = eigs.compute();
+
     if (eigs.info() != SUCCESSFUL) {
         cout << "Could not compute eigenvectors.\n";
         return;
@@ -336,6 +336,8 @@ void experiment(const string& filename) {
 
     cout << endl;
 }
+
+
 
 int main() {
     experiment("data/real/facebook_combined.txt");
