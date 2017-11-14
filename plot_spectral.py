@@ -5,11 +5,14 @@ import matplotlib.pyplot as plt
 import sys
 import os
 
+INPUT_DIR = "data/synthetic/"
+OUTPUT_DIR = "plots/"
+
 def plot_spectral(filename, index):
-    Graph = snap.LoadEdgeList(snap.PUNGraph, filename[:-4] + '.txt', 0, 1)
+    Graph = snap.LoadEdgeList(snap.PUNGraph, INPUT_DIR + filename + '.txt', 0, 1)
     v2 = []
     v3 = []
-    f = open(filename, "r")
+    f = open(INPUT_DIR + filename + '.out', "r")
     first = True
     N = -1
     for line in f:
@@ -31,9 +34,10 @@ def plot_spectral(filename, index):
     
     plt.xlabel('Second Smallest Eigenvector')
     plt.ylabel('Third Smallest Eigenvector')
-    plt.savefig(filename[:-4] + '.png', format='png')
+    plt.savefig(OUTPUT_DIR + filename + '.png', format='png')
 
 
-plot_spectral("data/synthetic/gnm_small0.out", 0);
-plot_spectral("data/synthetic/smallworld_small0.out", 1);
-plot_spectral("data/synthetic/prefattach_small0.out", 2);
+plot_spectral("gnm_small0", 0);
+plot_spectral("smallworld_small0", 1);
+plot_spectral("powerlaw_small0", 2);
+plot_spectral("prefattach_small0", 3);

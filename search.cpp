@@ -40,11 +40,12 @@ void generateSpectralEmbeddings(PUNGraph& G) {
             laplacian.insert(u, v) = -1; 
         }
     }
-
+    
     SparseSymMatProd<double> op(laplacian);
     SymEigsSolver<double, SMALLEST_MAGN, SparseSymMatProd<double> > eigs(&op, 3, N/3);
 
     eigs.init();
+    eigs.compute();
 
     if (eigs.info() != SUCCESSFUL) {
         cout << "Could not compute eigenvectors.\n";
@@ -300,8 +301,6 @@ void getSamples(PUNGraph& G, vector<pair<int, int> >& samples) {
     }
 }
 
-
-
 void experiment(const string& filename) {
     cout << "Running experiment on " << filename << endl;
     PUNGraph G = TSnap::LoadEdgeList<PUNGraph>(filename.c_str(), 0, 1);
@@ -322,7 +321,7 @@ void experiment(const string& filename) {
 
     cout << "Simulating degree strategy\n";
     simulate(G, samples, degreeStrategy);
-
+    
     cout << "Simulating random unvisited strategy\n";
     simulate(G, samples, randomUnvisitedStrategy);
 
@@ -331,24 +330,23 @@ void experiment(const string& filename) {
 
     cout << "Simulating random degree weighting strategy\n";
     simulate(G, samples, randomWeightedDegreeStrategy);
-
+    
     cout << "Optimal\n";
     optimal(G, samples);
+    
 
     cout << endl;
 }
 
-
-
 int main() {
-    // experiment("data/real/facebook_combined.txt");
-    // experiment("data/real/ca-HepTh.txt");
-    // experiment("data/real/cit-HepTh.txt");
+    experiment("data/real/facebook_combined.txt");
+    experiment("data/real/ca-HepTh.txt");
+    experiment("data/real/cit-HepTh.txt");
 
-    // experiment("data/synthetic/gnm0.txt");
-    // experiment("data/synthetic/smallworld0.txt");
-    //experiment("data/synthetic/powerlaw0.txt");
-    // experiment("data/synthetic/prefattach0.txt");
+    experiment("data/synthetic/gnm0.txt");
+    experiment("data/synthetic/smallworld0.txt");
+    experiment("data/synthetic/powerlaw0.txt");
+    experiment("data/synthetic/prefattach0.txt");
     
     experiment("data/synthetic/gnm_small0.txt");
     experiment("data/synthetic/smallworld_small0.txt");

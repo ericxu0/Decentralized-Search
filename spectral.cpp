@@ -17,6 +17,7 @@ using namespace Spectra;
 
 void outputEmbeddings(const string& filename) {
     PUNGraph G = TSnap::LoadEdgeList<PUNGraph>(filename.c_str(), 0, 1);
+    G = TSnap::GetMxWcc(G);
     
     map<int, int> nodeIdxToMatrixIdx;
     int index = 0;
@@ -58,6 +59,7 @@ int main() {
 
     outputEmbeddings("data/synthetic/gnm_small0.txt");
     outputEmbeddings("data/synthetic/smallworld_small0.txt");
+    outputEmbeddings("data/synthetic/powerlaw_small0.txt");
     outputEmbeddings("data/synthetic/prefattach_small0.txt");
     
     return 0;
