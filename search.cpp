@@ -300,6 +300,47 @@ void getSamples(PUNGraph& G, vector<pair<int, int> >& samples) {
     }
 }
 
+void visualizeNodeEmbeddings(const string& filename) {
+    cout << "Visualizing Node Embeddings on " << filename << endl;
+    node2vec_embeddings.clear();
+    generateNode2vecEmbeddings(filename);
+
+    PUNGraph G = TSnap::LoadEdgeList<PUNGraph>(filename.c_str(), 0, 1);
+    map<int,vector<int>, greater<int> > degreeMaps;
+
+
+    for (TUNGraph::TNodeI NI = G->BegNI(); NI < G->EndNI(); NI++) {
+        if ( degreeMaps.find(NI.GetOutDeg()) != degreeMaps.end() ) {
+            degreeMaps[NI.GetOutDeg()].push_back(NI.GetId());
+        }
+        else {
+            vector<int> nodes;
+            nodes.push_back(NI.GetId());
+            degreeMaps.insert({NI.GetOutDeg(), nodes});
+        }
+    }
+
+    vector<int> topTenNodes;
+
+    for (const auto& p : degreeMaps) {
+        for (const auto& n : p.second) {
+            topTenNodes.push_back(n);
+            if(topTenNodes.size() == 10)
+                break;
+        }
+        if(topTenNodes.size() == 10)
+            break;
+    }
+
+    for (const auto& n : topTenNodes) {
+        for (const auto& embedding: node2vec_embeddings[n]) {
+            cout << embedding << " ";
+        }
+        cout << endl;
+    }
+        
+}
+
 void experiment(const string& filename) {
     cout << "Running experiment on " << filename << endl;
     PUNGraph G = TSnap::LoadEdgeList<PUNGraph>(filename.c_str(), 0, 1);
@@ -314,7 +355,6 @@ void experiment(const string& filename) {
     //generateSpectralEmbeddings(G);
     node2vec_embeddings.clear();
     generateNode2vecEmbeddings(filename);
-
 
     vector<pair<int, int> > samples;
     getSamples(G, samples);
@@ -340,13 +380,14 @@ void experiment(const string& filename) {
 
 
 int main() {
-    experiment("data/real/facebook_combined.txt");
-    experiment("data/real/ca-HepTh.txt");
-    experiment("data/real/cit-HepTh.txt");
+    // experiment("data/real/facebook_combined.txt");
+    visualizeNodeEmbeddings("data/real/facebook_combined.txt");
+    // experiment("data/real/ca-HepTh.txt");
+    // experiment("data/real/cit-HepTh.txt");
 
-    experiment("data/synthetic/gnm0.txt");
-    experiment("data/synthetic/smallworld0.txt");
-    experiment("data/synthetic/prefattach0.txt");
+    // experiment("data/synthetic/gnm0.txt");
+    // experiment("data/synthetic/smallworld0.txt");
+    // experiment("data/synthetic/prefattach0.txt");
     
     //experiment("data/synthetic/gnm_small0.txt");
     //experiment("data/synthetic/smallworld_small0.txt");
