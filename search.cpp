@@ -88,6 +88,7 @@ double getSpectralDist(int a, int b) {
     return sqrt((pa.first - pb.first)*(pa.first - pb.first) + (pa.second - pb.second)*(pa.second - pb.second));
 }
 
+
 double getNode2VecDist(int a, int b) {
     double ret = 0.0;
     vector<double>& pa = node2vec_embeddings[a];
@@ -95,6 +96,21 @@ double getNode2VecDist(int a, int b) {
     for (int i = 0; i < pa.size(); i++)
         ret += (pa[i] - pb[i])*(pa[i] - pb[i]);
     return sqrt(ret);
+
+int getRandomNumber(int starting, int numberValues) {
+    return rand() % (numberValues + 1) + starting;
+}
+
+int selectWeightedNodes(vector<int>& nodes, vector<int>& weights, int totalWeight) {
+
+    int rnd = getRandomNumber(0, totalWeight);
+    for (int i=0; i < weights.size(); i++) {
+        if(rnd <= weights[i])
+            return nodes[i];
+        rnd -= weights[i];
+    }
+
+    return -1;
 }
 
 int spectralStrategy(PUNGraph& G, int cur, int dst, const set<int>& visited) {
@@ -128,6 +144,34 @@ int node2vecStrategy(PUNGraph& G, int cur, int dst, const set<int>& visited) {
     }
     if (best == -1)
         return randomNeighbor(NI);
+    return best;
+}
+
+
+/* Returns the unvisited neighbor from a probability distribution
+ * of nodes that are weighted by their degrees.
+ * If all neighbors are visited, returns a random neighbor, or -1 if there are none
+ */
+int randomWeightedDegreeStrategy(PUNGraph& G, int cur, const set<int>& visited) {
+    TUNGraph::TNodeI NI = G->GetNI(cur);
+    int best = -1;
+    vector<int> nodes, weights;
+    int totalWeight = 0;
+    for (int i = 0; i < NI.GetOutDeg(); i++) {
+        int nxt = NI.GetOutNId(i);
+        int nxtDeg = G->GetNI(nxt).GetOutDeg();
+        if (visited.find(nxt) == visited.end()) {
+            nodes.push_back(nxt);
+            weights.push_back(nxtDeg);
+            totalWeight += nxtDeg;
+        }
+    }
+
+    if (nodes.size() == 0)
+        return randomNeighbor(NI);
+    else
+        best = selectWeightedNodes(nodes, weights, totalWeight);
+
     return best;
 }
 
@@ -270,6 +314,7 @@ void experiment(const string& filename) {
     node2vec_embeddings.clear();
     generateNode2vecEmbeddings(filename);
 
+
     vector<pair<int, int> > samples;
     getSamples(G, samples);
 
@@ -281,6 +326,9 @@ void experiment(const string& filename) {
 
     cout << "Simulating random strategy\n";
     simulate(G, samples, randomStrategy);
+
+    cout << "Simulating random degree weighting strategy\n";
+    simulate(G, samples, randomWeightedDegreeStrategy);
 
     cout << "Optimal\n";
     optimal(G, samples);
