@@ -36,6 +36,14 @@ Length <=   100: 21.6%
 Length <=  1000: 46.4%
 Length <= 10000: 89.5%
 
+Simulating random degree weighting strategy
+Success rate: 100.0%
+Average path length: 909.1
+Length <=    10: 16.4%
+Length <=   100: 27.7%
+Length <=  1000: 67.7%
+Length <= 10000: 100.0%
+
 Optimal
 Success rate: 100.0%
 Average path length: 3.7
@@ -82,6 +90,14 @@ Length <=    10:  0.2%
 Length <=   100:  4.5%
 Length <=  1000: 31.2%
 Length <= 10000: 78.5%
+
+Simulating random degree weighting strategy
+Success rate: 100.0%
+Average path length: 3336.0
+Length <=    10:  0.9%
+Length <=   100: 11.7%
+Length <=  1000: 47.8%
+Length <= 10000: 91.2%
 
 Optimal
 Success rate: 100.0%
@@ -130,6 +146,14 @@ Length <=   100: 21.1%
 Length <=  1000: 54.9%
 Length <= 10000: 83.0%
 
+Simulating random degree weighting strategy
+Success rate: 99.8%
+Average path length: 3755.8
+Length <=    10:  9.5%
+Length <=   100: 37.1%
+Length <=  1000: 56.0%
+Length <= 10000: 88.2%
+
 Optimal
 Success rate: 100.0%
 Average path length: 4.2
@@ -175,6 +199,14 @@ Average path length: 533.5
 Length <=    10:  1.9%
 Length <=   100: 17.6%
 Length <=  1000: 84.1%
+Length <= 10000: 100.0%
+
+Simulating random degree weighting strategy
+Success rate: 100.0%
+Average path length: 455.3
+Length <=    10:  2.0%
+Length <=   100: 19.9%
+Length <=  1000: 89.4%
 Length <= 10000: 100.0%
 
 Optimal
@@ -224,6 +256,14 @@ Length <=   100: 16.1%
 Length <=  1000: 78.4%
 Length <= 10000: 100.0%
 
+Simulating random degree weighting strategy
+Success rate: 100.0%
+Average path length: 542.4
+Length <=    10:  1.9%
+Length <=   100: 16.2%
+Length <=  1000: 84.0%
+Length <= 10000: 100.0%
+
 Optimal
 Success rate: 100.0%
 Average path length: 3.5
@@ -269,6 +309,14 @@ Average path length: 360.1
 Length <=    10:  4.3%
 Length <=   100: 30.0%
 Length <=  1000: 91.6%
+Length <= 10000: 100.0%
+
+Simulating random degree weighting strategy
+Success rate: 100.0%
+Average path length: 157.3
+Length <=    10: 13.1%
+Length <=   100: 60.6%
+Length <=  1000: 98.4%
 Length <= 10000: 100.0%
 
 Optimal
