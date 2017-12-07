@@ -22,6 +22,14 @@ const int BUCKETS[] = {10, 100, 1000, 10000};
 
 map<int, pair<double, double> > spectral_embeddings;
 map<int, vector<double> > node2vec_embeddings;
+map<int, vector<int> > similarity_features;
+
+string getBase(string s) {
+    int idx = s.size() - 1;
+    while (idx >= 0 && s[idx] != '.')
+        idx--;
+    return s.substr(0, idx);
+}
 
 void generateSpectralEmbeddings(PUNGraph& G) {
     map<int, int> nodeIdxToMatrixIdx;
@@ -76,6 +84,22 @@ void generateNode2vecEmbeddings(const string& filename) {
     fin.close();
 }
 
+void generateSimilarityFeatures(const string& filename) {
+    string feat_file = getBase(filename) + ".feat";
+    ifstream fin(feat_file);
+    string input;
+    while (getline(fin, input) && input != "") {
+        stringstream ss(input);
+        int x;
+        ss >> x;
+        vector<int>& v = similarity_features[x];
+        while (ss >> x) {
+            v.push_back(x);
+        }
+    }
+    fin.close();
+}
+
 // Returns a random neighbor, or -1 if there are none.
 int randomNeighbor(TUNGraph::TNodeI NI) {
     if (NI.GetOutDeg() == 0)
@@ -99,19 +123,26 @@ double getNode2VecDist(int a, int b) {
     return sqrt(ret);
 }
 
+int getSimilarity(int a, int b) {
+    int len = similarity_features[a].size();
+    assert(similarity_features[a].size() == similarity_features[b].size());
+    int cnt = 0;
+    for (int i = 0; i < len; i++)
+        cnt += similarity_features[a][i] == 1 && similarity_features[b][i] == 1;
+    return cnt;
+}
+
 int getRandomNumber(int starting, int numberValues) {
     return rand() % (numberValues + 1) + starting;
 }
 
 int selectWeightedNodes(vector<int>& nodes, vector<int>& weights, int totalWeight) {
-
     int rnd = getRandomNumber(0, totalWeight);
     for (int i=0; i < weights.size(); i++) {
         if(rnd <= weights[i])
             return nodes[i];
         rnd -= weights[i];
     }
-
     return -1;
 }
 
@@ -149,6 +180,21 @@ int node2vecStrategy(PUNGraph& G, int cur, int dst, const set<int>& visited) {
     return best;
 }
 
+int similarityStrategy(PUNGraph& G, int cur, int dst, const set<int>& visited) {
+    TUNGraph::TNodeI NI = G->GetNI(cur);
+    int best = -1, cnt = -1;
+    for (int i = 0; i < NI.GetOutDeg(); i++) {
+        int nxt = NI.GetOutNId(i);
+        int d = getSimilarity(nxt, dst);
+        if (visited.find(nxt) == visited.end() && cnt < d) {
+            best = nxt;
+            cnt = d;
+        }
+    }
+    if (best == -1)
+        return randomNeighbor(NI);
+    return best;
+}
 
 /* Returns the unvisited neighbor from a probability distribution
  * of nodes that are weighted by their degrees.
@@ -309,10 +355,10 @@ void experiment(const string& filename) {
     cout << "# Edges (Max WCC): " << G->GetEdges() << endl;
     cout << endl;
 
-    spectral_embeddings.clear();
-    generateSpectralEmbeddings(G);
-    node2vec_embeddings.clear();
-    generateNode2vecEmbeddings(filename);
+    //spectral_embeddings.clear();
+    //generateSpectralEmbeddings(G);
+    //node2vec_embeddings.clear();
+    //generateNode2vecEmbeddings(filename);
 
     vector<pair<int, int> > samples;
     getSamples(G, samples);
@@ -329,16 +375,18 @@ void experiment(const string& filename) {
     cout << "Simulating random degree weighting strategy\n";
     simulate(G, samples, randomWeightedDegreeStrategy);
 
-    cout << "Simulating spectral embedding strategy\n";
-    simulate(G, samples, spectralStrategy);
+    //cout << "Simulating spectral embedding strategy\n";
+    //simulate(G, samples, spectralStrategy);
 
-    cout << "Simulating node2vec embedding strategy\n";
-    simulate(G, samples, node2vecStrategy);
+    //cout << "Simulating node2vec embedding strategy\n";
+    //simulate(G, samples, node2vecStrategy);
     
+    cout << "Simulating similarity strategy\n";
+    simulate(G, samples, similarityStrategy);
+
     cout << "Optimal\n";
     optimal(G, samples);
     
-
     cout << endl;
 }
 
@@ -352,10 +400,12 @@ int main() {
     //experiment("data/synthetic/powerlaw0.txt");
     //experiment("data/synthetic/prefattach0.txt");
     
-    experiment("data/synthetic/gnm_small0.txt");
-    experiment("data/synthetic/smallworld_small0.txt");
-    experiment("data/synthetic/powerlaw_small0.txt");
-    experiment("data/synthetic/prefattach_small0.txt");
+    //experiment("data/synthetic/gnm_small0.txt");
+    //experiment("data/synthetic/smallworld_small0.txt");
+    //experiment("data/synthetic/powerlaw_small0.txt");
+    //experiment("data/synthetic/prefattach_small0.txt");
+    
+    experiment("data/real/facebook/107.edges");
 
     return 0;
 }

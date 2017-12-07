@@ -2,6 +2,7 @@
 #include "spectra/SymEigsSolver.h"
 #include "spectra/MatOp/SparseSymMatProd.h"
 #include <algorithm>
+#include <cassert>
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/SparseCore>
 #include <fstream>
@@ -10,8 +11,8 @@
 #include <map>
 #include <numeric>
 #include <set>
+#include <sstream>
 #include <vector>
-#include <cassert>
 using namespace std;
 using namespace Eigen;
 using namespace Spectra;
@@ -23,21 +24,24 @@ const double probRandomEdge = 0.3;
 
 map<int, pair<double, double> > spectral_embeddings;
 map<int, vector<double> > node2vec_embeddings;
+map<int, vector<int> > similarity_features;
 
-void generateSpectralEmbeddings(PUNGraph& G) {
-    map<int, int> nodeIdxToMatrixIdx;
-    int index = 0;
-    for (TUNGraph::TNodeI NI = G->BegNI(); NI < G->EndNI(); NI++)
-        nodeIdxToMatrixIdx[NI.GetId()] = index++;
+string getBase(string s) {
+    int idx = s.size() - 1;
+    while (idx >= 0 && s[idx] != '.')
+        idx--;
+    return s.substr(0, idx);
+}
 
+void generateSpectralEmbeddings(PUNGraph& G, map<int, int>& compIdx) {
     int N = G->GetNodes();
     SparseMatrix<double> laplacian(N, N);
     laplacian.reserve(VectorXi::Constant(N, N + 2*G->GetEdges()));
     for (TUNGraph::TNodeI NI = G->BegNI(); NI < G->EndNI(); NI++) {
-        int u = nodeIdxToMatrixIdx[NI.GetId()];
+        int u = compIdx[NI.GetId()];
         laplacian.insert(u, u) = NI.GetOutDeg();
         for (int i = 0; i < NI.GetOutDeg(); i++) {
-            int v = nodeIdxToMatrixIdx[NI.GetOutNId(i)];
+            int v = compIdx[NI.GetOutNId(i)];
             laplacian.insert(u, v) = -1; 
         }
     }
@@ -53,15 +57,15 @@ void generateSpectralEmbeddings(PUNGraph& G) {
         return;
     }
     
-    for (map<int, int>::iterator it = nodeIdxToMatrixIdx.begin(); it != nodeIdxToMatrixIdx.end(); it++)
-        spectral_embeddings[it->first] = make_pair(eigs.eigenvectors()(it->second, 1), eigs.eigenvectors()(it->second, 0));
+    for (auto &e : compIdx)
+        spectral_embeddings[e.first] = make_pair(eigs.eigenvectors()(e.second, 1), eigs.eigenvectors()(e.second, 0));
 
     //cout << eigs.eigenvalues() << endl;
     //cout << eigs.eigenvectors() << endl;
 }
 
 void generateNode2vecEmbeddings(const string& filename) {
-    string embedding_file = filename.substr(0, filename.size() - 4) + ".emb";
+    string embedding_file = getBase(filename) + ".emb";
     ifstream fin(embedding_file);
     int N, D;
     fin >> N >> D;
@@ -77,28 +81,38 @@ void generateNode2vecEmbeddings(const string& filename) {
     fin.close();
 }
 
+void generateSimilarityFeatures(const string& filename) {
+    string feat_file = getBase(filename) + ".feat";
+    ifstream fin(feat_file);
+    string input;
+    while (getline(fin, input) && input != "") {
+        stringstream ss(input);
+        int x;
+        ss >> x;
+        vector<int>& v = similarity_features[x];
+        while (ss >> x) {
+            v.push_back(x);
+        }
+    }
+    fin.close();
+}
+
 double getSpectralDist(int a, int b) {
     pair<double, double> pa = spectral_embeddings[a];
     pair<double, double> pb = spectral_embeddings[b];
     return sqrt((pa.first - pb.first)*(pa.first - pb.first) + (pa.second - pb.second)*(pa.second - pb.second));
 }
 
-double getNode2VecDist(int a, int b) {
-    double ret = 0.0;
-    vector<double>& pa = node2vec_embeddings[a];
-    vector<double>& pb = node2vec_embeddings[b];
-    for (int i = 0; i < pa.size(); i++)
-        ret += (pa[i] - pb[i])*(pa[i] - pb[i]);
-    return sqrt(ret);
+int getSimilarity(int a, int b) {
+    int len = similarity_features[a].size();
+    assert(similarity_features[a].size() == similarity_features[b].size());
+    int cnt = 0;
+    for (int i = 0; i < len; i++)
+        cnt += similarity_features[a][i] == 1 && similarity_features[b][i] == 1;
+    return cnt;
 }
 
-int randomNeighbor(TUNGraph::TNodeI NI) {
-    if (NI.GetOutDeg() == 0)
-        return -1;
-    return NI.GetOutNId(rand() % NI.GetOutDeg());
-}
-
-void getFeatureVector(PUNGraph &G, int cur, set<int>& visited, vector<double>& feat, map<int, int>& visitedCnt) {
+void getFeatureVector(PUNGraph &G, int cur, int dst, set<int>& visited, vector<double>& feat, map<int, int>& visitedCnt) {
     TUNGraph::TNodeI curNI = G->GetNI(cur);
     int visitedNeighbors = 0;
     for (int i = 1; i < curNI.GetOutDeg(); i++) {
@@ -107,9 +121,15 @@ void getFeatureVector(PUNGraph &G, int cur, set<int>& visited, vector<double>& f
     }
     visitedCnt[visitedNeighbors]++;
 
+    feat.push_back(getSimilarity(cur, dst)); //similarity
     feat.push_back(curNI.GetOutDeg()); //degree
     feat.push_back(visited.find(cur) == visited.end()); //unvisited
     feat.push_back(visitedNeighbors); //visited neighbors count
+}
+
+int randomNeighbor(TUNGraph::TNodeI NI) {
+    assert(NI.GetOutDeg() != 0);
+    return NI.GetOutNId(rand() % NI.GetOutDeg());
 }
 
 void performWalk(PUNGraph& G, map<int, int>& compIdx, vector<vector<int> >& minDist, int src, int dst, vector<int>& path) {
@@ -193,9 +213,11 @@ void getTrainingData(const string& filename) {
     computeShortestPath(G, compIdx, minDist);
     
     //spectral_embeddings.clear();
-    //generateSpectralEmbeddings(G);
+    //generateSpectralEmbeddings(G, compIdx);
     //node2vec_embeddings.clear();
     //generateNode2vecEmbeddings(filename);
+    similarity_features.clear();
+    generateSimilarityFeatures(filename);
 
     vector<pair<int, int> > samples;
     getSamples(G, samples);
@@ -214,7 +236,7 @@ void getTrainingData(const string& filename) {
             visited.insert(path[i]);
         
         vector<double> feat;
-        getFeatureVector(G, randomNeighbor(G->GetNI(path[pidx])), visited, feat, visitedCnt);
+        getFeatureVector(G, randomNeighbor(G->GetNI(path[pidx])), s.second, visited, feat, visitedCnt);
     }
 
     cout << "True Path Lengths:\n";
