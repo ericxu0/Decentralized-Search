@@ -154,7 +154,7 @@ int node2vecStrategy(PUNGraph& G, int cur, int dst, const set<int>& visited) {
  * of nodes that are weighted by their degrees.
  * If all neighbors are visited, returns a random neighbor, or -1 if there are none
  */
-int randomWeightedDegreeStrategy(PUNGraph& G, int cur, const set<int>& visited) {
+int randomWeightedDegreeStrategy(PUNGraph& G, int cur, int dst, const set<int>& visited) {
     TUNGraph::TNodeI NI = G->GetNI(cur);
     int best = -1;
     vector<int> nodes, weights;
@@ -182,7 +182,7 @@ int randomWeightedDegreeStrategy(PUNGraph& G, int cur, const set<int>& visited) 
  * Returns the unvisited neighbor with highest out-degree.
  * If all neighbors are visited, returns a random neighbor, or -1 if there are none.
  */
-int degreeStrategy(PUNGraph& G, int cur, const set<int>& visited) {
+int degreeStrategy(PUNGraph& G, int cur, int dst, const set<int>& visited) {
     TUNGraph::TNodeI NI = G->GetNI(cur);
     int best = -1, bestDeg = -1;
     for (int i = 0; i < NI.GetOutDeg(); i++) {
@@ -201,7 +201,7 @@ int degreeStrategy(PUNGraph& G, int cur, const set<int>& visited) {
  * Returns a random unvisited neighbor.
  * If all neighbors are visited, returns a random neighbor, or -1 if there are none.
  */
-int randomUnvisitedStrategy(PUNGraph& G, int cur, const set<int>& visited) {
+int randomUnvisitedStrategy(PUNGraph& G, int cur, int dst, const set<int>& visited) {
     vector<int> unvisited;
     TUNGraph::TNodeI NI = G->GetNI(cur);
     for (int i = 0; i < NI.GetOutDeg(); i++) {
@@ -217,12 +217,12 @@ int randomUnvisitedStrategy(PUNGraph& G, int cur, const set<int>& visited) {
 /*
  * Returns a random neighbor, or -1 if there are none.
  */
-int randomStrategy(PUNGraph& G, int cur, const set<int>& visited) {
+int randomStrategy(PUNGraph& G, int cur, int dst, const set<int>& visited) {
     return randomNeighbor(G->GetNI(cur));
 }
 
 // Returns the number of steps, or -1 if failure.
-int search(PUNGraph& G, int src, int dst, int (*getNextNode)(PUNGraph&, int, const set<int>&)) {
+int search(PUNGraph& G, int src, int dst, int (*getNextNode)(PUNGraph&, int, int, const set<int>&)) {
     int dist = 0, cur = src;
     set<int> visited;
     while (cur != dst) {
@@ -231,9 +231,7 @@ int search(PUNGraph& G, int src, int dst, int (*getNextNode)(PUNGraph&, int, con
         if (G->IsEdge(cur, dst))
             return dist + 1;
         
-        int nxt = getNextNode(G, cur, visited);
-        //int nxt = spectralStrategy(G, cur, dst, visited);
-        //int nxt = node2vecStrategy(G, cur, dst, visited);
+        int nxt = getNextNode(G, cur, dst, visited);
         if (nxt == -1)
             return -1;
         cur = nxt;
@@ -264,7 +262,7 @@ void displayResults(vector<int>& results) {
     cout << endl;
 }
 
-void simulate(PUNGraph& G, vector<pair<int, int> >& samples, int (*getNextNode)(PUNGraph&, int, const set<int>&)) {
+void simulate(PUNGraph& G, vector<pair<int, int> >& samples, int (*getNextNode)(PUNGraph&, int, int, const set<int>&)) {
     vector<int> results;
     for (size_t i = 0; i < samples.size(); i++) {
         int dist = search(G, samples[i].first, samples[i].second, getNextNode);
@@ -312,7 +310,7 @@ void experiment(const string& filename) {
     cout << endl;
 
     spectral_embeddings.clear();
-    //generateSpectralEmbeddings(G);
+    generateSpectralEmbeddings(G);
     node2vec_embeddings.clear();
     generateNode2vecEmbeddings(filename);
 
@@ -330,6 +328,12 @@ void experiment(const string& filename) {
 
     cout << "Simulating random degree weighting strategy\n";
     simulate(G, samples, randomWeightedDegreeStrategy);
+
+    cout << "Simulating spectral embedding strategy\n";
+    simulate(G, samples, spectralStrategy);
+
+    cout << "Simulating node2vec embedding strategy\n";
+    simulate(G, samples, node2vecStrategy);
     
     cout << "Optimal\n";
     optimal(G, samples);
@@ -339,14 +343,14 @@ void experiment(const string& filename) {
 }
 
 int main() {
-    experiment("data/real/facebook_combined.txt");
-    experiment("data/real/ca-HepTh.txt");
-    experiment("data/real/cit-HepTh.txt");
+    //experiment("data/real/facebook_combined.txt");
+    //experiment("data/real/ca-HepTh.txt");
+    //experiment("data/real/cit-HepTh.txt");
 
-    experiment("data/synthetic/gnm0.txt");
-    experiment("data/synthetic/smallworld0.txt");
-    experiment("data/synthetic/powerlaw0.txt");
-    experiment("data/synthetic/prefattach0.txt");
+    //experiment("data/synthetic/gnm0.txt");
+    //experiment("data/synthetic/smallworld0.txt");
+    //experiment("data/synthetic/powerlaw0.txt");
+    //experiment("data/synthetic/prefattach0.txt");
     
     experiment("data/synthetic/gnm_small0.txt");
     experiment("data/synthetic/smallworld_small0.txt");
