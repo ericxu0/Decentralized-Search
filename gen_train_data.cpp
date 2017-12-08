@@ -21,12 +21,12 @@ using namespace Spectra;
 const bool DEBUG = false;
 const bool WRITE_TO_FILE = true;
 
-const int NUM_SAMPLES = 10000;
+const int NUM_SAMPLES = 1000000;
 const int SEED = 224;
 const int INFTY = 1<<28;
 const double probRandomEdge = 1.0/3;
 
-void getFeatureVector(PUNGraph &G, int cur, int dst, set<int>& visited, vector<double>& feat, map<int, int>& visitedCnt) {
+void getFeatureVector(PUNGraph& G, int cur, int dst, set<int>& visited, vector<double>& feat, map<int, int>& visitedCnt) {
     TUNGraph::TNodeI curNI = G->GetNI(cur);
     int visitedNeighbors = 0;
     for (int i = 0; i < curNI.GetOutDeg(); i++) {
@@ -35,6 +35,8 @@ void getFeatureVector(PUNGraph &G, int cur, int dst, set<int>& visited, vector<d
     }
     visitedCnt[visitedNeighbors]++;
 
+    feat.push_back(G->GetNodes());                      // graph nodes
+    feat.push_back(G->GetEdges());                      // graph edges
     feat.push_back(getSimilarity(cur, dst));            // similarity
     feat.push_back(curNI.GetOutDeg());                  // degree
     feat.push_back(visited.find(cur) == visited.end()); // 0 if unvisited, 1 if visited
@@ -204,8 +206,12 @@ int main() {
         dataFile.open("training_data.txt");
 
     // TODO: do this for all graphs, should programmatically find all files like "data/real/*/*.edges"
-    getTrainingData("data/real/facebook/0.edges", dataFile);
+    //getTrainingData("data/real/facebook/0.edges", dataFile);
     getTrainingData("data/real/facebook/107.edges", dataFile);
+    //getTrainingData("data/real/facebook/348.edges", dataFile);
+    //getTrainingData("data/real/facebook/414.edges", dataFile);
+    //getTrainingData("data/real/facebook/686.edges", dataFile);
+    //getTrainingData("data/real/facebook/698.edges", dataFile);
     //getTrainingData("data/real/gplus/", dataFile);
     //getTrainingData("data/real/twitter/", dataFile);
 
