@@ -18,8 +18,8 @@ using namespace Spectra;
 
 const int NUM_TRIALS = 1000;
 const int SEED = 42;
-const int CAP = 100 * 1000;
-const int BUCKETS[] = {10, 100, 1000, 10000};
+const int CAP = 1000;
+const int BUCKETS[] = {10, 100, 1000};
 
 // Returns the number of steps, or -1 if failure.
 int search(PUNGraph& G, int src, int dst, int (*getNextNode)(PUNGraph&, int, int, const set<int>&)) {
@@ -56,7 +56,10 @@ void displayResults(vector<int>& results) {
         for (int val : results)
             if (val <= size)
                 count++;
+        ios init(NULL);
+        init.copyfmt(cout);
         cout << "Length <= " << setw(5) << size << ": " << fixed << setprecision(1) << setw(4) << 100.0 * count / NUM_TRIALS << "\%\n";
+        cout.copyfmt(init);
     }
 
     cout << endl;
@@ -148,6 +151,9 @@ void experiment(const string& filename) {
     cout << "Simulating EVN\n";
     simulate(G, samples, EVNStrategy);
 
+    cout << "Simulating linear regression strategy\n";
+    simulate(G, samples, LinRegStrategy);
+
     cout << "Optimal\n";
     optimal(G, samples);
     
@@ -169,7 +175,8 @@ int main() {
     //experiment("data/synthetic/powerlaw_small0.txt");
     //experiment("data/synthetic/prefattach_small0.txt");
     
-    experiment("data/real/facebook/0.edges");
+    //experiment("data/real/facebook/0.edges");
+    experiment("data/real/facebook/107.edges");
 
     return 0;
 }

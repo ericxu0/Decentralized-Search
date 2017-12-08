@@ -20,11 +20,11 @@ using namespace Spectra;
 
 const bool DEBUG = false;
 const bool WRITE_TO_FILE = true;
-const string DATA_FILENAME = "training_data_100k.txt";
+const string DATA_FILENAME = "training_data_10k_0.txt";
 
 const string GRAPH_EXTENSION = ".edges";
 
-const int NUM_SAMPLES = 100000;
+const int NUM_SAMPLES = 10000;
 const int NUM_WALKS = 1000;
 const int SEED = 224;
 const int INFTY = 1<<28;
@@ -218,7 +218,8 @@ int main() {
     vector<string> allEdgeFiles = getAllFiles(facebookRoot, GRAPH_EXTENSION);
     for(auto&& fileName : allEdgeFiles) {
         string fullFileName = facebookRoot + fileName;
-        if (fileName.substr(0, 3) == "107")
+        //if (fileName.substr(0, 3) == "107")
+        if (fileName.substr(0, 1) == "0")
             getTrainingData(fullFileName, dataFile);
     }
 

@@ -18,7 +18,7 @@ trainY = []
 testX = []
 testY = []
 
-for line in open("training_data_100k.txt"):
+for line in open("training_data_10k_0.txt"):
     split = line.split(", ")
 
     x = map(float, split[0].split(" "))

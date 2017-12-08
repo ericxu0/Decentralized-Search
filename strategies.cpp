@@ -17,6 +17,61 @@ using namespace std;
 using namespace Eigen;
 using namespace Spectra;
 
+map<int, double> clustCf;
+
+double predictPathLength(PUNGraph& G, int cur, int dst, const set<int>& visited) {
+    TUNGraph::TNodeI curNI = G->GetNI(cur);
+    int visitedNeighbors = 0;
+    for (int i = 0; i < curNI.GetOutDeg(); i++) {
+        int x = curNI.GetOutNId(i);
+        visitedNeighbors += visited.find(x) != visited.end();
+    }
+    double fracVisited = 1.0 * visitedNeighbors / curNI.GetOutDeg();
+
+    if (clustCf.find(cur) == clustCf.end())
+        clustCf[cur] = TSnap::GetNodeClustCf(G, cur);
+
+    vector<double> feat;
+    //feat.push_back(G->GetNodes());                      // graph nodes
+    //feat.push_back(G->GetEdges());                      // graph edges
+    feat.push_back(getSimilarity(cur, dst));            // similarity
+    feat.push_back(curNI.GetOutDeg());                  // degree
+    feat.push_back(clustCf[cur]);                       // clustering coefficient
+    feat.push_back(visited.find(cur) == visited.end()); // 1 if unvisited, 0 if visited
+    feat.push_back(visitedNeighbors);                   // number of visited neighbors
+    feat.push_back(fracVisited);                        // fraction of visited neighbors
+
+    double weights[] = {-1.20790353e-01, -1.16367699e-03,  2.88583429e-01,  6.19656527e-02, 5.06394477e-02,  1.87175770e+00}; // TODO: for 107.edges
+    //double weights[] = {-0.21352646,-0.01762945, 0.11491546,-0.31480496, 0.32982428, 0.3627876}; // TODO: for 0.edges
+
+    double dot = 0.0;
+    for (size_t i = 0; i < feat.size(); i++)
+        dot += feat[i] * weights[i];
+    return dot;
+}
+
+int LinRegStrategy(PUNGraph& G, int cur, int dst, const set<int>& visited) {
+    TUNGraph::TNodeI NI = G->GetNI(cur);
+    double bestVal = 1E20;
+    vector<int> choices;
+    for (int i = 0; i < NI.GetOutDeg(); i++) {
+        int nxt = NI.GetOutNId(i);
+        if (visited.find(nxt) != visited.end())
+            continue;
+        double nxtVal = predictPathLength(G, nxt, dst, visited);
+        if (nxtVal < bestVal) {
+            bestVal = nxtVal;
+            choices.clear();
+        }
+        if (bestVal == nxtVal)
+            choices.push_back(nxt);
+    }
+    if (choices.size() == 0)
+        return randomNeighbor(NI);
+    return randomElement(choices);
+}
+
+
 // TODO: this is incredibly hacky
 // Basically we need to compute, for all similarity values V, the value:
 //   [# node-pairs (s,t) where (s,t) is an edge and similarity(s,t)=V] / [# pairs (s,t) where similarity(s,t)=V]
@@ -25,6 +80,7 @@ map<int, double> init() {
     map<int, double> map;
 
     // On facebook 0.edges
+    /*
     map[0 ] = 0.0298034242232;
     map[1 ] = 0.0361002349256;
     map[2 ] = 0.0396181384248;
@@ -41,9 +97,9 @@ map<int, double> init() {
     map[13] = 0.6            ;
     map[14] = 0.5            ;
     map[15] = 1.0            ;
+    */
 
     // On facebook 107.edges
-    /*
     map[0 ] = 0.0111970622761;
     map[1 ] = 0.0283930565425;
     map[2 ] = 0.0294564391885;
@@ -63,7 +119,6 @@ map<int, double> init() {
     map[16] = 0              ;
     map[17] = 0              ;
     map[18] = 1.0            ;
-    */
     return map;
 }
 map<int, double> mapSimilarityToEdgeProbability = init();
