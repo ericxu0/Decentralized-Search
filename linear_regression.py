@@ -19,7 +19,7 @@ testY = []
 for line in open("training_data.txt"):
     split = line.split(" , ")
     x = map(float, split[0].split(" "))
-    x = x[2:6] + [1]
+    x = x[2:6] + [1] # TODO: change this if data changes!!
     y = float(split[1])
     if random.random() < TEST_AMOUNT:
         testX.append(x)

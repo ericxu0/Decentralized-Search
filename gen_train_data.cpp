@@ -177,7 +177,7 @@ void getTrainingData(const string& filename, ofstream& dataFile) {
             cout << endl;
             cout << "  Output (true path length): " << minDist[a][b] << endl;
         } else if ((i+1) % (NUM_SAMPLES / 10) == 0) {
-            cout << "Finished generating training pair " << (i+1) << endl;
+            cout << "Finished generating " << (i+1) << " training pairs" << endl;
         }
 
         if (WRITE_TO_FILE) {
@@ -206,8 +206,6 @@ int main() {
     ofstream dataFile;
     if (WRITE_TO_FILE)
         dataFile.open("training_data.txt");
-
-    // TODO: do this for all graphs, should programmatically find all files like "data/real/*/*.edges"
 
     //getTrainingData("data/real/gplus/", dataFile);
     //getTrainingData("data/real/twitter/", dataFile);
