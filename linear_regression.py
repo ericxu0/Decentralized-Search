@@ -3,8 +3,14 @@
 import matplotlib.pyplot as plot
 import random
 from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import PolynomialFeatures
 
 TEST_AMOUNT = 0.2
+
+USE_POLY = False
+
+if USE_POLY:
+    poly = PolynomialFeatures(degree=2)
 
 trainX = []
 trainY = []
@@ -13,6 +19,7 @@ testY = []
 for line in open("training_data.txt"):
     split = line.split(" , ")
     x = map(float, split[0].split(" "))
+    x = x[2:6] + [1]
     y = float(split[1])
     if random.random() < TEST_AMOUNT:
         testX.append(x)
@@ -20,6 +27,10 @@ for line in open("training_data.txt"):
     else:
         trainX.append(x)
         trainY.append(y)
+
+if USE_POLY:
+    trainX = poly.fit_transform(trainX)
+    testX = poly.fit_transform(testX)
 
 linreg = LinearRegression(fit_intercept=False, normalize=False, copy_X=True, n_jobs=1)
 linreg.fit(trainX, trainY)
