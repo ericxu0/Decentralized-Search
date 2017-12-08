@@ -33,9 +33,9 @@ string getBase(string s) {
 
 // return the filenames of all files that have the specified extension
 // in the specified directory and all subdirectories
-vector<fs::path> get_all(const fs::path& root, const string& ext)
+vector<string> getAllFiles(const fs::path& root, const string& ext)
 {
-    vector<fs::path> ret;
+    vector<string> ret;
 
     if(!fs::exists(root) || !fs::is_directory(root)) return ret;
 
@@ -44,7 +44,9 @@ vector<fs::path> get_all(const fs::path& root, const string& ext)
 
     while(it != endit)
     {
-        if(fs::is_regular_file(*it) && it->path().extension() == ext) ret.push_back(it->path().filename());
+        if(fs::is_regular_file(*it) && it->path().extension() == ext) {
+            ret.push_back(it->path().filename().string());
+        }
         ++it;
 
     }

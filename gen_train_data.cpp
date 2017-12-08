@@ -21,6 +21,8 @@ using namespace Spectra;
 const bool DEBUG = false;
 const bool WRITE_TO_FILE = true;
 
+const string GRAPH_EXTENSION = ".edges";
+
 const int NUM_SAMPLES = 1000000;
 const int SEED = 224;
 const int INFTY = 1<<28;
@@ -206,14 +208,14 @@ int main() {
         dataFile.open("training_data.txt");
 
     // TODO: do this for all graphs, should programmatically find all files like "data/real/*/*.edges"
-    //getTrainingData("data/real/facebook/0.edges", dataFile);
-    getTrainingData("data/real/facebook/107.edges", dataFile);
-    //getTrainingData("data/real/facebook/348.edges", dataFile);
-    //getTrainingData("data/real/facebook/414.edges", dataFile);
-    //getTrainingData("data/real/facebook/686.edges", dataFile);
-    //getTrainingData("data/real/facebook/698.edges", dataFile);
+
     //getTrainingData("data/real/gplus/", dataFile);
     //getTrainingData("data/real/twitter/", dataFile);
+
+    string facebookRoot = "data/real/facebook";
+    vector<string> allEdgeFiles = getAllFiles(facebookRoot, GRAPH_EXTENSION);
+    for(auto&& fileName : allEdgeFiles)
+        getTrainingData(hello, dataFile);
 
     if (WRITE_TO_FILE)
         dataFile.close();
