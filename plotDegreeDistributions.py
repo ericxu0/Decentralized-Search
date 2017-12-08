@@ -59,7 +59,7 @@ def plotGraphs():
     x_smallworld, y_smallworld = getDataPointsToPlot(smallWorld)
     plt.loglog(x_smallworld, y_smallworld, color = 'c', label = 'Small World Network')
 
-    x_powerlaw, y_powerlaw = getDataPointsToPlot(smallWorld)
+    x_powerlaw, y_powerlaw = getDataPointsToPlot(powerLaw)
     plt.loglog(x_powerlaw, y_powerlaw, color = 'm', label = 'Power Law Network')
 
     x_prefAttachment, y_prefAttachment = getDataPointsToPlot(prefAttachment)
