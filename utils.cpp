@@ -154,6 +154,10 @@ int getRandomNumber(int starting, int numberValues) {
     return rand() % (numberValues + 1) + starting;
 }
 
+int randomElement(vector<int> choices) {
+    return choices[rand() % choices.size()];
+}
+
 int selectWeightedNodes(vector<int>& nodes, vector<int>& weights, int totalWeight) {
     int rnd = getRandomNumber(0, totalWeight);
     for (size_t i=0; i < weights.size(); i++) {

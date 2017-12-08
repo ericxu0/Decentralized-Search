@@ -145,6 +145,9 @@ void experiment(const string& filename) {
     cout << "Simulating similarity strategy\n";
     simulate(G, samples, similarityStrategy);
 
+    cout << "Simulating EVN\n";
+    simulate(G, samples, EVNStrategy);
+
     cout << "Optimal\n";
     optimal(G, samples);
     

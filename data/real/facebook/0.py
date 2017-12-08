@@ -7,7 +7,7 @@ def sim(vec1, vec2):
             count += 1
     return count
 
-for graphName in ["0", "107", "1684", "1912", "3437", "348", "3980", "414", "686", "698"]:
+for graphName in ["0"]: #["0", "107", "1684", "1912", "3437", "348", "3980", "414", "686", "698"]:
     edgeList = [map(int, line.split()) for line in open(graphName + ".edges")]
     featureList = [map(int, line.split()) for line in open(graphName + ".feat")]
     
@@ -46,6 +46,9 @@ for graphName in ["0", "107", "1684", "1912", "3437", "348", "3980", "414", "686
     for i in range(maxSim + 1):
         ys.append(edgeCount[i] / float(totalCount[i]) if totalCount[i] != 0 else 0)
     
+    print "Edge probabilities:"
+    for i in range(len(xs)):
+        print "similarity:", xs[i], " probability:", ys[i]
     plot.plot(xs, ys)
     plot.title("Edge probability, graph" + graphName)
     plot.show()

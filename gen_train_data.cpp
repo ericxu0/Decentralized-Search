@@ -86,7 +86,7 @@ void performWalk(PUNGraph& G, map<int, int>& compIdx, vector<vector<int> >& minD
                     choices.push_back(x);
                 }
             }
-            nxt = choices[rand() % choices.size()];
+            nxt = randomElement(choices);
         }
     
         path.push_back(nxt);
