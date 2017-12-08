@@ -16,8 +16,8 @@ NUM_TRAIN = 9000
 NUM_VALIDATE = NUM_ENTRIES - NUM_TRAIN
 BATCH_SIZE = 1
 EPOCHS = [(100, 2e-3)]
-RESTORE = False
-PERFORM_TRAIN = True
+RESTORE = True
+PERFORM_TRAIN = False
 TRAIN = 'training_data.txt'
 logFile = open("log.txt", "w")
 
@@ -100,6 +100,26 @@ def train(sess, model, saver):
             epoch += 1
     print "Best Loss:", best_loss
 
+def plot_error(sess, model):
+    trainX, trainY, testX, testY = get_dataset()
+    
+    allPred = None
+    num_batches = int((len(testX) + BATCH_SIZE - 1)/BATCH_SIZE)
+    for b in range(num_batches):
+        x = testX[(b*BATCH_SIZE):((b + 1)*BATCH_SIZE)]
+        y = testY[(b*BATCH_SIZE):((b + 1)*BATCH_SIZE)]
+        loss, pred = model.predict_on_batch(sess, x, y)
+        pred = np.abs(pred - y)
+        if allPred is None:
+            allPred = pred
+        else:
+            allPred = np.concatenate((allPred, pred), axis=0)
+    
+    yVal = [y for y in allPred]
+    yVal.sort()
+    plt.plot(np.arange(NUM_VALIDATE), yVal)
+    plt.savefig('error_plot.png', format='png')
+
 def main():
     model = None
     sess = None
@@ -116,8 +136,8 @@ def main():
             saver.restore(sess, 'model.weights')
         if PERFORM_TRAIN:
             train(sess, model, saver)
-
-        print "Done training"
+        else:
+            plot_error(sess, model)
 
 if __name__ == "__main__":
     main()
