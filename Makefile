@@ -2,7 +2,7 @@ include ../../Makefile.config
 
 TARGETS=search degree create_graphs spectral nodeEmbeddings gen_train_data
 CXXFLAGS2 = $(filter-out -std=c++98,$(CXXFLAGS))
-CXXFLAGS2 += -std=c++11
+CXXFLAGS2 += -std=c++11 -Wno-delete-non-virtual-dtor
 
 all: $(TARGETS)
 

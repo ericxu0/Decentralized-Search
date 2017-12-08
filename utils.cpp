@@ -100,7 +100,7 @@ double getNode2VecDist(int a, int b) {
     double ret = 0.0;
     vector<double>& pa = node2vec_embeddings[a];
     vector<double>& pb = node2vec_embeddings[b];
-    for (int i = 0; i < pa.size(); i++)
+    for (size_t i = 0; i < pa.size(); i++)
         ret += (pa[i] - pb[i])*(pa[i] - pb[i]);
     return sqrt(ret);
 }
@@ -127,7 +127,7 @@ int getRandomNumber(int starting, int numberValues) {
 
 int selectWeightedNodes(vector<int>& nodes, vector<int>& weights, int totalWeight) {
     int rnd = getRandomNumber(0, totalWeight);
-    for (int i=0; i < weights.size(); i++) {
+    for (size_t i=0; i < weights.size(); i++) {
         if(rnd <= weights[i])
             return nodes[i];
         rnd -= weights[i];

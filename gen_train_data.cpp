@@ -18,24 +18,32 @@ using namespace std;
 using namespace Eigen;
 using namespace Spectra;
 
-const int NUM_SAMPLES = 100000;
+const bool DEBUG = false;
+const bool WRITE_TO_FILE = true;
+
+const int NUM_SAMPLES = 10000;
 const int SEED = 224;
 const int INFTY = 1<<28;
-const double probRandomEdge = 0.3;
+const double probRandomEdge = 1.0/3;
 
 void getFeatureVector(PUNGraph &G, int cur, int dst, set<int>& visited, vector<double>& feat, map<int, int>& visitedCnt) {
     TUNGraph::TNodeI curNI = G->GetNI(cur);
     int visitedNeighbors = 0;
-    for (int i = 1; i < curNI.GetOutDeg(); i++) {
+    for (int i = 0; i < curNI.GetOutDeg(); i++) {
         int x = curNI.GetOutNId(i);
         visitedNeighbors += visited.find(x) != visited.end();
     }
     visitedCnt[visitedNeighbors]++;
 
-    feat.push_back(getSimilarity(cur, dst)); //similarity
-    feat.push_back(curNI.GetOutDeg()); //degree
-    feat.push_back(visited.find(cur) == visited.end()); //unvisited
-    feat.push_back(visitedNeighbors); //visited neighbors count
+    feat.push_back(getSimilarity(cur, dst));            // similarity
+    feat.push_back(curNI.GetOutDeg());                  // degree
+    feat.push_back(visited.find(cur) == visited.end()); // 0 if unvisited, 1 if visited
+    feat.push_back(visitedNeighbors);                   // number of visited neighbors
+    feat.push_back(0);                                  // TODO: abs(v2[cur] - v2[dst]), where v2 is the 2nd eigenvector
+    feat.push_back(0);                                  // TODO: ...
+    feat.push_back(0);                                  // TODO: abs(v6[cur] - v6[dst])
+    feat.push_back(0);                                  // TODO: something with node2vec
+    feat.push_back(1);                                  // constant term for linear regression
 }
 
 void performWalk(PUNGraph& G, map<int, int>& compIdx, vector<vector<int> >& minDist, int src, int dst, vector<int>& path) {
@@ -50,15 +58,27 @@ void performWalk(PUNGraph& G, map<int, int>& compIdx, vector<vector<int> >& minD
         
         TUNGraph::TNodeI curNI = G->GetNI(cur);
         int nxt;
+        int nxtDist;
+        vector<int> choices;
         if (1.0*rand()/RAND_MAX <= probRandomEdge)
             nxt = randomNeighbor(curNI);
         else {
             nxt = curNI.GetOutNId(0);
+            choices.push_back(nxt);
+            nxtDist = minDist[compIdx[dst]][compIdx[nxt]];
             for (int i = 1; i < curNI.GetOutDeg(); i++) {
                 int x = curNI.GetOutNId(i);
-                if (minDist[compIdx[x]][compIdx[dst]] < minDist[compIdx[nxt]][compIdx[dst]])
+                int xDist = minDist[compIdx[dst]][compIdx[x]];
+                if (xDist < nxtDist) {
                     nxt = x;
+                    nxtDist = xDist;
+                    choices.clear();
+                }
+                if (xDist == nxtDist) {
+                    choices.push_back(x);
+                }
             }
+            nxt = choices[rand() % choices.size()];
         }
     
         path.push_back(nxt);
@@ -100,8 +120,8 @@ void computeShortestPath(PUNGraph& G, map<int, int>& compIdx, vector<vector<int>
                 minDist[i][j] = min(minDist[i][j], minDist[i][k] + minDist[k][j]);
 }
 
-void getTrainingData(const string& filename) {
-    cout << "Generating Training Data on " << filename << endl;
+void getTrainingData(const string& filename, ofstream& dataFile) {
+    cout << "\nGenerating training Data on " << filename << endl;
     PUNGraph G = TSnap::LoadEdgeList<PUNGraph>(filename.c_str(), 0, 1);
     cout << "# Nodes: " << G->GetNodes() << endl;
     cout << "# Edges: " << G->GetEdges() << endl;
@@ -128,7 +148,8 @@ void getTrainingData(const string& filename) {
     vector<pair<int, int> > samples;
     getSamples(G, samples);
     map<int, int> truePathLen, genPathLen, visitedCnt;
-    for (auto& s : samples) {
+    for (size_t i = 0; i < samples.size(); i++) {
+        auto& s = samples[i];
         int a = compIdx[s.first];
         int b = compIdx[s.second];
         truePathLen[minDist[a][b]]++;
@@ -143,23 +164,52 @@ void getTrainingData(const string& filename) {
         
         vector<double> feat;
         getFeatureVector(G, randomNeighbor(G->GetNI(path[pidx])), s.second, visited, feat, visitedCnt);
+
+        if (DEBUG) {
+            cout << "Training pair " << i+1 << ":" << endl;
+            cout << "  Input (feature vector):   ";
+            for (int f : feat)
+                cout << " " << f;
+            cout << endl;
+            cout << "  Output (true path length): " << minDist[a][b] << endl;
+        } else if ((i+1) % (NUM_SAMPLES / 10) == 0) {
+            cout << "Finished generating training pair " << (i+1) << endl;
+        }
+
+        if (WRITE_TO_FILE) {
+            for (int f : feat)
+                dataFile << f << " ";
+            dataFile << ", " << minDist[a][b] << endl;
+        }
     }
 
-    cout << "True Path Lengths:\n";
-    for (auto& e : truePathLen)
-        cout << e.first << ": " << e.second << "\n";
-    cout << "Generated Path Lengths:\n";
-    for (auto& e : genPathLen)
-        cout << e.first << ": " << e.second << "\n";
-    cout << "Number of Visited Neighbors:\n";
-    for (auto& e : visitedCnt)
-        cout << e.first << ": " << e.second << "\n";
+    if (DEBUG) {
+        cout << "True Path Lengths:\n";
+        for (auto& e : truePathLen)
+            cout << e.first << ": " << e.second << "\n";
+        cout << "Generated Path Lengths:\n";
+        for (auto& e : genPathLen)
+            cout << e.first << ": " << e.second << "\n";
+        cout << "Number of Visited Neighbors:\n";
+        for (auto& e : visitedCnt)
+            cout << e.first << ": " << e.second << "\n";
+    } else {
+        cout << "Finished generating training data." << endl;
+    }
 }
 
 int main() {
-    getTrainingData("data/real/facebook/0.edges");
-    //getTrainingData("data/real/gplus/");
-    //getTrainingData("data/real/twitter/");
+    ofstream dataFile;
+    if (WRITE_TO_FILE)
+        dataFile.open("training_data.txt");
 
+    // TODO: do this for all graphs, should programmatically find all files like "data/real/*/*.edges"
+    getTrainingData("data/real/facebook/0.edges", dataFile);
+    getTrainingData("data/real/facebook/107.edges", dataFile);
+    //getTrainingData("data/real/gplus/", dataFile);
+    //getTrainingData("data/real/twitter/", dataFile);
+
+    if (WRITE_TO_FILE)
+        dataFile.close();
     return 0;
 }
