@@ -40,7 +40,7 @@ void outputEmbeddings(const string& filename) {
     SymEigsSolver<double, SMALLEST_MAGN, SparseSymMatProd<double> > eigs(&op, 3, N/3);
 
     eigs.init();
-    int nconv = eigs.compute();
+    //int nconv = eigs.compute();
     if (eigs.info() != SUCCESSFUL) {
         cout << "Could not compute eigenvectors.\n";
         return;
