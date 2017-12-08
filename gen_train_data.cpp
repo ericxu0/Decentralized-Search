@@ -216,7 +216,8 @@ int main() {
     vector<string> allEdgeFiles = getAllFiles(facebookRoot, GRAPH_EXTENSION);
     for(auto&& fileName : allEdgeFiles) {
         string fullFileName = facebookRoot + fileName;
-        getTrainingData(fullFileName, dataFile);
+        if (fileName.substr(0, 3) == "107")
+            getTrainingData(fullFileName, dataFile);
     }
 
     if (WRITE_TO_FILE)
