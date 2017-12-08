@@ -212,10 +212,12 @@ int main() {
     //getTrainingData("data/real/gplus/", dataFile);
     //getTrainingData("data/real/twitter/", dataFile);
 
-    string facebookRoot = "data/real/facebook";
+    string facebookRoot = "data/real/facebook/";
     vector<string> allEdgeFiles = getAllFiles(facebookRoot, GRAPH_EXTENSION);
-    for(auto&& fileName : allEdgeFiles)
-        getTrainingData(hello, dataFile);
+    for(auto&& fileName : allEdgeFiles) {
+        string fullFileName = facebookRoot + fileName;
+        getTrainingData(fullFileName, dataFile);
+    }
 
     if (WRITE_TO_FILE)
         dataFile.close();
