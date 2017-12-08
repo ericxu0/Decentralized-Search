@@ -3,7 +3,7 @@ import tensorflow as tf
 class Model(object):
     def add_placeholders(self):
         self.lr = tf.placeholder(tf.float32)
-        self.X = tf.placeholder(tf.float32, [None, 4])
+        self.X = tf.placeholder(tf.float32, [None, 106])
         self.y = tf.placeholder(tf.float32)
         self.is_training = tf.placeholder(tf.bool)
 
@@ -18,9 +18,10 @@ class Model(object):
         return feed_dict
 
     def add_prediction_op(self):
-        h1 = tf.layers.dense(self.X, 4, activation=tf.nn.relu)
-        h2 = tf.layers.dense(h1, 2, activation=tf.nn.relu)
-        pred = tf.layers.dense(h2, 1, activation=tf.nn.relu)
+        h1 = tf.layers.dense(self.X, 100, activation=tf.nn.relu)
+        h2 = tf.layers.dense(h1, 100, activation=tf.nn.relu)
+        h3 = tf.layers.dense(h2, 100, activation=tf.nn.relu)
+        pred = tf.layers.dense(h3, 1)
         return pred
 
     def add_loss_op(self, pred):
@@ -29,20 +30,18 @@ class Model(object):
 
     def add_training_op(self, loss):
         optimizer = tf.train.AdamOptimizer(self.lr)
-        extra_update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-        with tf.control_dependencies(extra_update_ops):
-            train_op = optimizer.minimize(loss)
+        train_op = optimizer.minimize(loss)
         return train_op
 
     def train_on_batch(self, sess, inputs_batch, labels_batch, rate):
         feed = self.create_feed_dict(inputs_batch, True, labels_batch=labels_batch, lr=rate)
-        _, loss = sess.run([self.train_op, self.loss], feed_dict=feed)
-        return loss
+        _, loss, pred = sess.run([self.train_op, self.loss, self.pred], feed_dict=feed)
+        return loss, pred
 
     def predict_on_batch(self, sess, inputs_batch, labels_batch=None):
         feed = self.create_feed_dict(inputs_batch, False, labels_batch=labels_batch)
-        loss = sess.run(self.loss, feed_dict=feed)
-        return loss
+        loss, pred = sess.run([self.loss, self.pred], feed_dict=feed)
+        return loss, pred
 
     def __init__(self):
         self.add_placeholders()

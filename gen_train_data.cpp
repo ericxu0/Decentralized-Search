@@ -39,19 +39,20 @@ void getFeatureVector(PUNGraph& G, int cur, int dst, set<int>& visited, map<int,
     }
     double fracVisited = 1.0 * visitedNeighbors / curNI.GetOutDeg();
 
-    feat.push_back(G->GetNodes());                      // graph nodes
-    feat.push_back(G->GetEdges());                      // graph edges
+    //feat.push_back(G->GetNodes());                      // graph nodes
+    //feat.push_back(G->GetEdges());                      // graph edges
     feat.push_back(getSimilarity(cur, dst));            // similarity
     feat.push_back(curNI.GetOutDeg());                  // degree
     feat.push_back(clusterCf[cur]);                     // clustering coefficient
     feat.push_back(visited.find(cur) == visited.end()); // 1 if unvisited, 0 if visited
     feat.push_back(visitedNeighbors);                   // number of visited neighbors
     feat.push_back(fracVisited);                        // fraction of visited neighbors
-    feat.push_back(0);                                  // TODO: abs(v2[cur] - v2[dst]), where v2 is the 2nd eigenvector
-    feat.push_back(0);                                  // TODO: ...
-    feat.push_back(0);                                  // TODO: abs(v6[cur] - v6[dst])
-    feat.push_back(0);                                  // TODO: something with node2vec
-    feat.push_back(1);                                  // constant term for linear regression
+    //feat.push_back(0);                                  // TODO: abs(v2[cur] - v2[dst]), where v2 is the 2nd eigenvector
+    //feat.push_back(0);                                  // TODO: ...
+    //feat.push_back(0);                                  // TODO: abs(v6[cur] - v6[dst])
+    //feat.push_back(0);                                  // TODO: something with node2vec
+    //feat.push_back(1);                                  // constant term for linear regression
+    feat.insert(feat.end(), node2vec_embeddings[cur].begin(), node2vec_embeddings[cur].end());
 }
 
 void performWalk(PUNGraph& G, map<int, int>& compIdx, vector<vector<int> >& minDist, int src, int dst, vector<int>& path) {
@@ -148,8 +149,8 @@ void getTrainingData(const string& filename, ofstream& dataFile) {
     
     //spectral_embeddings.clear();
     //generateSpectralEmbeddings(G, compIdx);
-    //node2vec_embeddings.clear();
-    //generateNode2vecEmbeddings(filename);
+    node2vec_embeddings.clear();
+    generateNode2vecEmbeddings(filename);
     similarity_features.clear();
     generateSimilarityFeatures(filename);
 
@@ -218,8 +219,8 @@ int main() {
     vector<string> allEdgeFiles = getAllFiles(facebookRoot, GRAPH_EXTENSION);
     for(auto&& fileName : allEdgeFiles) {
         string fullFileName = facebookRoot + fileName;
-        //if (fileName.substr(0, 3) == "107")
-        if (fileName.substr(0, 1) == "0")
+        if (fileName.substr(0, 3) == "107")
+        //if (fileName.substr(0, 1) == "0")
             getTrainingData(fullFileName, dataFile);
     }
 

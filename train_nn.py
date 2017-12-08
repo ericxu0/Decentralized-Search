@@ -11,11 +11,11 @@ import random
 
 from model import Model
 
-NUM_ENTRIES = 100#0000
-NUM_TRAIN = 80#0000
+NUM_ENTRIES = 10000
+NUM_TRAIN = 9000
 NUM_VALIDATE = NUM_ENTRIES - NUM_TRAIN
-BATCH_SIZE = 100
-EPOCHS = [(10, 1e-3)]
+BATCH_SIZE = 1
+EPOCHS = [(100, 2e-3)]
 RESTORE = False
 PERFORM_TRAIN = True
 TRAIN = 'training_data.txt'
@@ -25,14 +25,17 @@ def get_dataset():
     trainX, trainY, testX, testY = [], [], [], []
     index = 0
     for line in open("training_data.txt"):
-        split = line.split(" , ")
+        split = line.split(", ")
         x = map(float, split[0].split(" "))
-        y = float(split[1])
+        trueLen = int(split[1])
+        randomWalkLen = float(split[2])
+        y = randomWalkLen
+
         if index < NUM_TRAIN:
-            trainX.append(x[2:6])
+            trainX.append(x)
             trainY.append(y)
         else:
-            testX.append(x[2:6])
+            testX.append(x)
             testY.append(y)
         index += 1
     return trainX, trainY, testX, testY
@@ -55,21 +58,28 @@ def run_epoch(model, sess, X, Y, is_training, lr):
         inputs_batch = np.array(inputs_batch)
         labels_batch = np.array(labels_batch)
 
+        pred = None
         if is_training:
-            loss = model.train_on_batch(sess, inputs_batch, labels_batch, lr)
+            loss, pred = model.train_on_batch(sess, inputs_batch, labels_batch, lr)
             avg_loss += loss/num_batches
         else:
-            loss = model.predict_on_batch(sess, inputs_batch, labels_batch)
+            loss, pred = model.predict_on_batch(sess, inputs_batch, labels_batch)
             avg_loss += loss/num_batches
         
-        if b % 100 == 0 and b > 0:
-            print("completed %d batches" % b)
+        #if not is_training:
+        #    print "Predictions:"
+        #    print pred
+        #    print "True:"
+        #    print labels_batch
+
+        #if b % 100 == 0 and b > 0:
+        #    print("completed %d batches" % b)
 
     if is_training:
-        print("Training loss:", avg_loss)
+        print "Training loss:", avg_loss
         logFile.write("Training loss: %.10f\n" % avg_loss)
     else:
-        print("Validation loss:", avg_loss)
+        print "Validation loss:", avg_loss
         logFile.write("Validation loss: %.10f\n" % avg_loss)
 
     return avg_loss
@@ -80,15 +90,15 @@ def train(sess, model, saver):
     best_loss = 1E10
     for numEpochs, lr in EPOCHS:
         for i in range(numEpochs):
-            print("Epoch", epoch)
-            run_epoch(model, sess, trainX, trainY, True, lr)
+            print "Epoch", epoch
+            cur_loss = run_epoch(model, sess, trainX, trainY, True, lr)
             cur_loss = run_epoch(model, sess, testX, testY, False, lr)
             if best_loss > cur_loss:
-                print("better loss found, saving weights")
+                print "better loss found, saving weights"
                 saver.save(sess, 'model.weights')
                 best_loss = cur_loss
             epoch += 1
-    print("Best Loss:", best_loss)
+    print "Best Loss:", best_loss
 
 def main():
     model = None
@@ -107,7 +117,7 @@ def main():
         if PERFORM_TRAIN:
             train(sess, model, saver)
 
-        print("Done training")
+        print "Done training"
 
 if __name__ == "__main__":
     main()
