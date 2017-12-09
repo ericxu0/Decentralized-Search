@@ -21,7 +21,7 @@ using namespace Spectra;
 
 const int NUM_TRIALS = 100;
 const int SEED = 42;
-const int CAP = 1000;
+const int CAP = 10000;
 const int BUCKETS[] = {10, 100, 1000};
 
 // Returns the number of steps, or -1 if failure.
@@ -71,7 +71,7 @@ void displayResults(vector<int>& results) {
 void simulate(PUNGraph& G, vector<pair<int, int> >& samples, int (*getNextNode)(PUNGraph&, int, int, const set<int>&)) {
     vector<int> results;
     for (size_t i = 0; i < samples.size(); i++) {
-        fprintf(stderr, "On Sample %zu\n", i);
+        //fprintf(stderr, "On Sample %zu\n", i);
         int dist = search(G, samples[i].first, samples[i].second, getNextNode);
         if (dist != -1)
             results.push_back(dist);
@@ -148,11 +148,11 @@ void experiment(const string& filename) {
     // cout << "Simulating spectral embedding strategy\n";
     // simulate(G, samples, spectralStrategy);
 
-    // cout << "Simulating node2vec embedding strategy\n";
-    // simulate(G, samples, node2vecStrategy);
+    cout << "Simulating node2vec embedding strategy\n";
+    simulate(G, samples, node2vecStrategy);
     
-    // cout << "Simulating similarity strategy\n";
-    // simulate(G, samples, similarityStrategy);
+    cout << "Simulating similarity strategy\n";
+    simulate(G, samples, similarityStrategy);
 
     // cout << "Simulating EVN\n";
     // simulate(G, samples, EVNStrategy);
@@ -160,11 +160,11 @@ void experiment(const string& filename) {
     // cout << "Simulating linear regression strategy\n";
     // simulate(G, samples, LinRegStrategy);
 
-    cout << "Simulating neural network strategy\n";
-    printf("Starting Strategy\n");
-    fflush(stdout);
+    // cout << "Simulating neural network strategy\n";
+    // printf("Starting Strategy\n");
+    // fflush(stdout);
 
-    simulate(G, samples, NeuralNetStrategy);
+    // simulate(G, samples, NeuralNetStrategy);
 
 
     
