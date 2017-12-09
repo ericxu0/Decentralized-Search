@@ -162,7 +162,7 @@ def main(executeStrategy):
 
                 nextInput = stdout.next().rstrip()
 
-                while nextInput != "done" :
+                while nextInput != "Finished Simulation":
                     numberElementInVector = int(nextInput)
 
                     vec = []
@@ -178,6 +178,12 @@ def main(executeStrategy):
                     proc.stdin.flush()
 
                     nextInput = stdout.next().rstrip()
+
+                print "Finished Simulation. Now Displaying Results."
+                while nextInput != "Finished Experiment":
+                    nextInput = stdout.next().rstrip()
+                    print nextInput
+                    pass
 
 
                 proc.terminate()

@@ -96,16 +96,13 @@ double tfPredictPathLength(PUNGraph& G, int cur, int dst, const set<int>& visite
     double prediction;
     scanf("%lf", &prediction);
 
-    fprintf(stderr, "Predicted Path: %lf\n", prediction);
+    // fprintf(stderr, "Predicted Path: %lf\n", prediction);
 
     return prediction;
     
 }
 
 int NeuralNetStrategy(PUNGraph& G, int cur, int dst, const set<int>& visited) {
-
-    
-    fprintf(stderr, "Starting Neural Net Strategy\n");
 
     TUNGraph::TNodeI NI = G->GetNI(cur);
     double bestVal = 1E20;

@@ -19,7 +19,7 @@ using namespace std;
 using namespace Eigen;
 using namespace Spectra;
 
-const int NUM_TRIALS = 1;
+const int NUM_TRIALS = 100;
 const int SEED = 42;
 const int CAP = 1000;
 const int BUCKETS[] = {10, 100, 1000};
@@ -71,11 +71,12 @@ void displayResults(vector<int>& results) {
 void simulate(PUNGraph& G, vector<pair<int, int> >& samples, int (*getNextNode)(PUNGraph&, int, int, const set<int>&)) {
     vector<int> results;
     for (size_t i = 0; i < samples.size(); i++) {
+        fprintf(stderr, "On Sample %zu\n", i);
         int dist = search(G, samples[i].first, samples[i].second, getNextNode);
         if (dist != -1)
             results.push_back(dist);
     }
-    printf("done\n");
+    printf("Finished Simulation\n");
     fflush(stdout);
     displayResults(results);
 }
@@ -172,6 +173,9 @@ void experiment(const string& filename) {
     optimal(G, samples);
     
     cout << endl;
+
+    printf("Finished Experiment\n");
+    fflush(stdout);
 }
 
 int main() {
