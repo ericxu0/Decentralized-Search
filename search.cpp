@@ -134,20 +134,20 @@ void experiment(const string& filename) {
     vector<pair<int, int> > samples;
     getSamples(G, samples);
 
-    // cout << "Simulating degree strategy\n";
-    // simulate(G, samples, degreeStrategy);
+    cout << "Simulating degree strategy\n";
+    simulate(G, samples, degreeStrategy);
     
-    // cout << "Simulating random unvisited strategy\n";
-    // simulate(G, samples, randomUnvisitedStrategy);
+    cout << "Simulating random unvisited strategy\n";
+    simulate(G, samples, randomUnvisitedStrategy);
 
-    // cout << "Simulating random strategy\n";
-    // simulate(G, samples, randomStrategy);
+    cout << "Simulating random strategy\n";
+    simulate(G, samples, randomStrategy);
 
-    // cout << "Simulating random degree weighting strategy\n";
-    // simulate(G, samples, randomWeightedDegreeStrategy);
+    cout << "Simulating random degree weighting strategy\n";
+    simulate(G, samples, randomWeightedDegreeStrategy);
 
-    // cout << "Simulating spectral embedding strategy\n";
-    // simulate(G, samples, spectralStrategy);
+    cout << "Simulating spectral embedding strategy\n";
+    simulate(G, samples, spectralStrategy);
 
     cout << "Simulating node2vec embedding strategy\n";
     simulate(G, samples, node2vecStrategy);
@@ -155,11 +155,11 @@ void experiment(const string& filename) {
     cout << "Simulating similarity strategy\n";
     simulate(G, samples, similarityStrategy);
 
-    // cout << "Simulating EVN\n";
-    // simulate(G, samples, EVNStrategy);
+    cout << "Simulating EVN\n";
+    simulate(G, samples, EVNStrategy);
 
-    // cout << "Simulating linear regression strategy\n";
-    // simulate(G, samples, LinRegStrategy);
+    cout << "Simulating linear regression strategy\n";
+    simulate(G, samples, LinRegStrategy);
 
     // cout << "Simulating neural network strategy\n";
     // printf("Starting Strategy\n");
