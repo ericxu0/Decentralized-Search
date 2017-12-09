@@ -4,10 +4,16 @@ import math
 import sys
 import random
 import os
+import signal
 import csv
 import matplotlib
 import matplotlib.pyplot as plt
 import random
+import argparse
+import subprocess
+import time
+
+
 
 from model import Model
 
@@ -100,6 +106,8 @@ def train(sess, model, saver):
             epoch += 1
     print "Best Loss:", best_loss
 
+
+
 def plot_error(sess, model):
     trainX, trainY, testX, testY = get_dataset()
     
@@ -120,24 +128,87 @@ def plot_error(sess, model):
     plt.plot(np.arange(NUM_VALIDATE), yVal)
     plt.savefig('error_plot.png', format='png')
 
-def main():
+def main(executeStrategy):
     model = None
     sess = None
     mean = None
-    with tf.Graph().as_default():
-        model = Model()
-        saver = tf.train.Saver()
-        init = tf.global_variables_initializer()
-        sess = tf.Session()
-        sess.run(init)
-        tf.add_to_collection("pred", model.pred)
 
-        if RESTORE:
+    if executeStrategy:
+        with tf.Graph().as_default():
+            model = Model()
+            saver = tf.train.Saver()
+            init = tf.global_variables_initializer()
+            sess = tf.Session()
+            sess.run(init)
+            tf.add_to_collection("pred", model.pred)
             saver.restore(sess, 'model.weights')
-        if PERFORM_TRAIN:
-            train(sess, model, saver)
-        else:
-            plot_error(sess, model)
+
+            proc = subprocess.Popen("./search", stdin=subprocess.PIPE, stdout=subprocess.PIPE, 
+                universal_newlines=True, 
+                shell=True)
+
+            try:
+                print "PYTHON: Starting Functions"
+                stdout = iter(proc.stdout.readline, "")
+
+                # Ignore stdout until we read this flag
+                nextInput = stdout.next()
+                while nextInput != "Starting Strategy":
+                    nextInput = stdout.next().rstrip()
+                    pass
+
+                print "PYTHON: Starting READING"
+                # Start executing functions until we read this flag
+
+                nextInput = stdout.next().rstrip()
+
+                while nextInput != "done" :
+                    numberElementInVector = int(nextInput)
+
+                    vec = []
+                    for i in range(numberElementInVector):
+                        nextInput = stdout.next().rstrip()
+                        vec.append(float(nextInput))
+                    input_batch = np.reshape(np.array(vec), (1, -1))
+
+
+                    loss, pred = model.predict_on_batch(sess, input_batch, [0])
+                    predictedValue = pred[0][0]
+                    proc.stdin.write(str(predictedValue) + "\n")
+                    proc.stdin.flush()
+
+                    nextInput = stdout.next().rstrip()
+
+
+                proc.terminate()
+
+            except KeyboardInterrupt:
+                print "KILLED"
+                proc.stdout.close()
+                proc.stdin.close()
+                proc.kill()
+
+
+
+    else:
+        with tf.Graph().as_default():
+            model = Model()
+            saver = tf.train.Saver()
+            init = tf.global_variables_initializer()
+            sess = tf.Session()
+            sess.run(init)
+            tf.add_to_collection("pred", model.pred)
+
+            if RESTORE:
+                saver.restore(sess, 'model.weights')
+            if PERFORM_TRAIN:
+                train(sess, model, saver)
+            else:
+                plot_error(sess, model)
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-s", "--strategy", help="execute the C++ strategy",
+                    action="store_true")
+    args = parser.parse_args()
+    main(args.strategy)

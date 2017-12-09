@@ -13,6 +13,9 @@
 #include <numeric>
 #include <set>
 #include <vector>
+#include <stdio.h>
+#include <stdlib.h>
+
 using namespace std;
 using namespace Eigen;
 using namespace Spectra;
@@ -41,6 +44,7 @@ double predictPathLength(PUNGraph& G, int cur, int dst, const set<int>& visited)
     feat.push_back(visitedNeighbors);                   // number of visited neighbors
     feat.push_back(fracVisited);                        // fraction of visited neighbors
 
+    // pipe for tensorflow
     double weights[] = {-1.20790353e-01, -1.16367699e-03,  2.88583429e-01,  6.19656527e-02, 5.06394477e-02,  1.87175770e+00}; // TODO: for 107.edges
     //double weights[] = {-0.21352646,-0.01762945, 0.11491546,-0.31480496, 0.32982428, 0.3627876}; // TODO: for 0.edges
 
@@ -48,6 +52,80 @@ double predictPathLength(PUNGraph& G, int cur, int dst, const set<int>& visited)
     for (size_t i = 0; i < feat.size(); i++)
         dot += feat[i] * weights[i];
     return dot;
+}
+
+
+
+double tfPredictPathLength(PUNGraph& G, int cur, int dst, const set<int>& visited) {
+
+    TUNGraph::TNodeI curNI = G->GetNI(cur);
+    int visitedNeighbors = 0;
+    for (int i = 0; i < curNI.GetOutDeg(); i++) {
+        int x = curNI.GetOutNId(i);
+        visitedNeighbors += visited.find(x) != visited.end();
+    }
+    double fracVisited = 1.0 * visitedNeighbors / curNI.GetOutDeg();
+
+    if (clustCf.find(cur) == clustCf.end())
+        clustCf[cur] = TSnap::GetNodeClustCf(G, cur);
+
+    vector<double> feat;
+    //feat.push_back(G->GetNodes());                      // graph nodes
+    //feat.push_back(G->GetEdges());                      // graph edges
+    feat.push_back(getSimilarity(cur, dst));            // similarity
+    feat.push_back(curNI.GetOutDeg());                  // degree
+    feat.push_back(clustCf[cur]);                       // clustering coefficient
+    feat.push_back(visited.find(cur) == visited.end()); // 1 if unvisited, 0 if visited
+    feat.push_back(visitedNeighbors);                   // number of visited neighbors
+    feat.push_back(fracVisited);                        // fraction of visited neighbors
+
+
+
+    feat.insert(feat.end(), node2vec_embeddings[cur].begin(), node2vec_embeddings[cur].end());
+
+    int lengthVector = feat.size();
+
+    printf("%d\n", lengthVector);
+
+    for(int i = 0; i < lengthVector; i++) {
+        printf("%f\n", feat[i]);
+    }
+
+    fflush(stdout);
+
+    double prediction;
+    scanf("%lf", &prediction);
+
+    fprintf(stderr, "Predicted Path: %lf\n", prediction);
+
+    return prediction;
+    
+}
+
+int NeuralNetStrategy(PUNGraph& G, int cur, int dst, const set<int>& visited) {
+
+    
+    fprintf(stderr, "Starting Neural Net Strategy\n");
+
+    TUNGraph::TNodeI NI = G->GetNI(cur);
+    double bestVal = 1E20;
+    vector<int> choices;
+    for (int i = 0; i < NI.GetOutDeg(); i++) {
+        int nxt = NI.GetOutNId(i);
+        if (visited.find(nxt) != visited.end())
+            continue;
+        double nxtVal = tfPredictPathLength(G, nxt, dst, visited);
+        if (nxtVal < bestVal) {
+            bestVal = nxtVal;
+            choices.clear();
+        }
+        if (bestVal == nxtVal)
+            choices.push_back(nxt);
+    }
+
+    if (choices.size() == 0)
+        return randomNeighbor(NI);
+    return randomElement(choices);
 }
 
 int LinRegStrategy(PUNGraph& G, int cur, int dst, const set<int>& visited) {

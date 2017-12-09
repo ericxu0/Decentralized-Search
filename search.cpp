@@ -12,11 +12,14 @@
 #include <numeric>
 #include <set>
 #include <vector>
+#include <stdio.h>
+#include <stdlib.h>
+
 using namespace std;
 using namespace Eigen;
 using namespace Spectra;
 
-const int NUM_TRIALS = 1000;
+const int NUM_TRIALS = 1;
 const int SEED = 42;
 const int CAP = 1000;
 const int BUCKETS[] = {10, 100, 1000};
@@ -72,6 +75,8 @@ void simulate(PUNGraph& G, vector<pair<int, int> >& samples, int (*getNextNode)(
         if (dist != -1)
             results.push_back(dist);
     }
+    printf("done\n");
+    fflush(stdout);
     displayResults(results);
 }
 
@@ -119,40 +124,49 @@ void experiment(const string& filename) {
 
     //spectral_embeddings.clear();
     //generateSpectralEmbeddings(G, compIdx);
-    //node2vec_embeddings.clear();
-    //generateNode2vecEmbeddings(filename);
+    node2vec_embeddings.clear();
+    generateNode2vecEmbeddings(filename);
     similarity_features.clear();
     generateSimilarityFeatures(filename);
 
     vector<pair<int, int> > samples;
     getSamples(G, samples);
 
-    cout << "Simulating degree strategy\n";
-    simulate(G, samples, degreeStrategy);
+    // cout << "Simulating degree strategy\n";
+    // simulate(G, samples, degreeStrategy);
     
-    cout << "Simulating random unvisited strategy\n";
-    simulate(G, samples, randomUnvisitedStrategy);
+    // cout << "Simulating random unvisited strategy\n";
+    // simulate(G, samples, randomUnvisitedStrategy);
 
-    cout << "Simulating random strategy\n";
-    simulate(G, samples, randomStrategy);
+    // cout << "Simulating random strategy\n";
+    // simulate(G, samples, randomStrategy);
 
-    cout << "Simulating random degree weighting strategy\n";
-    simulate(G, samples, randomWeightedDegreeStrategy);
+    // cout << "Simulating random degree weighting strategy\n";
+    // simulate(G, samples, randomWeightedDegreeStrategy);
 
-    //cout << "Simulating spectral embedding strategy\n";
-    //simulate(G, samples, spectralStrategy);
+    // cout << "Simulating spectral embedding strategy\n";
+    // simulate(G, samples, spectralStrategy);
 
-    //cout << "Simulating node2vec embedding strategy\n";
-    //simulate(G, samples, node2vecStrategy);
+    // cout << "Simulating node2vec embedding strategy\n";
+    // simulate(G, samples, node2vecStrategy);
     
-    cout << "Simulating similarity strategy\n";
-    simulate(G, samples, similarityStrategy);
+    // cout << "Simulating similarity strategy\n";
+    // simulate(G, samples, similarityStrategy);
 
-    cout << "Simulating EVN\n";
-    simulate(G, samples, EVNStrategy);
+    // cout << "Simulating EVN\n";
+    // simulate(G, samples, EVNStrategy);
 
-    cout << "Simulating linear regression strategy\n";
-    simulate(G, samples, LinRegStrategy);
+    // cout << "Simulating linear regression strategy\n";
+    // simulate(G, samples, LinRegStrategy);
+
+    cout << "Simulating neural network strategy\n";
+    printf("Starting Strategy\n");
+    fflush(stdout);
+
+    simulate(G, samples, NeuralNetStrategy);
+
+
+    
 
     cout << "Optimal\n";
     optimal(G, samples);
@@ -176,6 +190,9 @@ int main() {
     //experiment("data/synthetic/prefattach_small0.txt");
     
     //experiment("data/real/facebook/0.edges");
+    fprintf(stderr, "Starting Search Algorithm\n");
+
+
     experiment("data/real/facebook/107.edges");
 
     return 0;
