@@ -21,7 +21,7 @@ NUM_ENTRIES = 10000
 NUM_TRAIN = 9000
 NUM_VALIDATE = NUM_ENTRIES - NUM_TRAIN
 BATCH_SIZE = 1
-EPOCHS = [(100, 2e-3)]
+EPOCHS = [(100, 5e-4), (100, 1e-4)]
 RESTORE = True
 PERFORM_TRAIN = False
 TRAIN = 'training_data.txt'
@@ -38,10 +38,10 @@ def get_dataset():
         y = randomWalkLen
 
         if index < NUM_TRAIN:
-            trainX.append(x)
+            trainX.append(x[:6])
             trainY.append(y)
         else:
-            testX.append(x)
+            testX.append(x[:6])
             testY.append(y)
         index += 1
     return trainX, trainY, testX, testY
@@ -101,7 +101,7 @@ def train(sess, model, saver):
             cur_loss = run_epoch(model, sess, testX, testY, False, lr)
             if best_loss > cur_loss:
                 print "better loss found, saving weights"
-                saver.save(sess, 'model.weights')
+                saver.save(sess, 'model6.weights')
                 best_loss = cur_loss
             epoch += 1
     print "Best Loss:", best_loss
@@ -141,7 +141,7 @@ def main(executeStrategy):
             sess = tf.Session()
             sess.run(init)
             tf.add_to_collection("pred", model.pred)
-            saver.restore(sess, 'model.weights')
+            saver.restore(sess, 'model6.weights')
 
             proc = subprocess.Popen("./search", stdin=subprocess.PIPE, stdout=subprocess.PIPE, 
                 universal_newlines=True, 
@@ -206,7 +206,7 @@ def main(executeStrategy):
             tf.add_to_collection("pred", model.pred)
 
             if RESTORE:
-                saver.restore(sess, 'model.weights')
+                saver.restore(sess, 'model6.weights')
             if PERFORM_TRAIN:
                 train(sess, model, saver)
             else:

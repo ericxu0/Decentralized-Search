@@ -81,7 +81,7 @@ double tfPredictPathLength(PUNGraph& G, int cur, int dst, const set<int>& visite
 
 
 
-    feat.insert(feat.end(), node2vec_embeddings[cur].begin(), node2vec_embeddings[cur].end());
+    //feat.insert(feat.end(), node2vec_embeddings[cur].begin(), node2vec_embeddings[cur].end());
 
     int lengthVector = feat.size();
 

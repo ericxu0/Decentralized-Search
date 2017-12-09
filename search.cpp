@@ -19,9 +19,10 @@ using namespace std;
 using namespace Eigen;
 using namespace Spectra;
 
-const int NUM_TRIALS = 100;
+const string GRAPH_EXTENSION = ".edges";
+const int NUM_TRIALS = 1000;
 const int SEED = 42;
-const int CAP = 10000;
+const int CAP = 1000;
 const int BUCKETS[] = {10, 100, 1000};
 
 // Returns the number of steps, or -1 if failure.
@@ -197,7 +198,13 @@ int main() {
     fprintf(stderr, "Starting Search Algorithm\n");
 
 
-    experiment("data/real/facebook/107.edges");
+    string facebookRoot = "data/real/facebook/";
+    vector<string> allEdgeFiles = getAllFiles(facebookRoot, GRAPH_EXTENSION);
+    for(auto&& fileName : allEdgeFiles) {
+        string fullFileName = facebookRoot + fileName;
+        if (fileName.substr(0, 3) == "107")
+            experiment(fullFileName);
+    }
 
     return 0;
 }
