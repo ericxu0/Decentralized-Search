@@ -99,6 +99,56 @@ int evnStrategy(PUNGraph& G, int cur, int dst, const set<int>& visited) {
     return randomElement(choices);
 }
 
+double tfPredictPathLength(PUNGraph& G, int cur, int dst, const set<int>& visited) {
+
+    vector<double> feat;
+    getFeatureVector(G, cur, dst, visited, feat);
+
+    int lengthVector = feat.size();
+
+    printf("%d\n", lengthVector);
+
+    for(int i = 0; i < lengthVector; i++) {
+        printf("%f\n", feat[i]);
+    }
+
+    fflush(stdout);
+
+    double prediction;
+    scanf("%lf", &prediction);
+
+    // fprintf(stderr, "Predicted Path: %lf\n", prediction);
+
+    return prediction;
+    
+}
+
+int neuralNetStrategy(PUNGraph& G, int cur, int dst, const set<int>& visited) {
+
+    
+    fprintf(stderr, "Starting Neural Net Strategy\n");
+
+    TUNGraph::TNodeI NI = G->GetNI(cur);
+    double bestVal = 1E20;
+    vector<int> choices;
+    for (int i = 0; i < NI.GetOutDeg(); i++) {
+        int nxt = NI.GetOutNId(i);
+        if (visited.find(nxt) != visited.end())
+            continue;
+        double nxtVal = tfPredictPathLength(G, nxt, dst, visited);
+        if (nxtVal < bestVal) {
+            bestVal = nxtVal;
+            choices.clear();
+        }
+        if (bestVal == nxtVal)
+            choices.push_back(nxt);
+    }
+
+    if (choices.size() == 0)
+        return randomNeighbor(NI);
+    return randomElement(choices);
+}
+
 int similarityStrategy(PUNGraph& G, int cur, int dst, const set<int>& visited) {
     TUNGraph::TNodeI NI = G->GetNI(cur);
     double bestSim = -1;

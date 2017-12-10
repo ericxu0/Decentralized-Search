@@ -17,31 +17,31 @@ import time
 
 from model import Model
 
-NUM_ENTRIES = 10000
-NUM_TRAIN = 9000
+NUM_ENTRIES = 100000
+NUM_TRAIN = 90000
 NUM_VALIDATE = NUM_ENTRIES - NUM_TRAIN
 BATCH_SIZE = 1
-EPOCHS = [(100, 5e-4), (100, 1e-4)]
-RESTORE = True
-PERFORM_TRAIN = False
-TRAIN = 'training_data.txt'
+EPOCHS = [(100, 5e-4)]
+RESTORE = False
+PERFORM_TRAIN = True
+TRAIN = "data/training_data/training_data_facebook-all_n2v.txt"
 logFile = open("log.txt", "w")
 
 def get_dataset():
     trainX, trainY, testX, testY = [], [], [], []
     index = 0
-    for line in open("training_data.txt"):
+    for line in open(TRAIN):
         split = line.split(", ")
         x = map(float, split[0].split(" "))
         trueLen = int(split[1])
         randomWalkLen = float(split[2])
-        y = randomWalkLen
+        y = trueLen
 
         if index < NUM_TRAIN:
-            trainX.append(x[:6])
+            trainX.append(x[:8])
             trainY.append(y)
         else:
-            testX.append(x[:6])
+            testX.append(x[:8])
             testY.append(y)
         index += 1
     return trainX, trainY, testX, testY
@@ -206,7 +206,7 @@ def main(executeStrategy):
             tf.add_to_collection("pred", model.pred)
 
             if RESTORE:
-                saver.restore(sess, 'model6.weights')
+                saver.restore(sess, 'model.weights')
             if PERFORM_TRAIN:
                 train(sess, model, saver)
             else:

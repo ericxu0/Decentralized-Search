@@ -3,7 +3,7 @@ import tensorflow as tf
 class Model(object):
     def add_placeholders(self):
         self.lr = tf.placeholder(tf.float32)
-        self.X = tf.placeholder(tf.float32, [None, 6])
+        self.X = tf.placeholder(tf.float32, [None, 8])
         self.y = tf.placeholder(tf.float32)
         self.is_training = tf.placeholder(tf.bool)
 
@@ -18,9 +18,9 @@ class Model(object):
         return feed_dict
 
     def add_prediction_op(self):
-        h1 = tf.layers.dense(self.X, 6, activation=tf.nn.relu)
-        h1 = tf.layers.dense(h1, 6, activation=tf.nn.relu)
-        pred = tf.layers.dense(h1, 1)
+        h1 = tf.layers.dense(self.X, 100, activation=tf.nn.relu)
+        h2 = tf.layers.dense(h1, 20, activation=tf.nn.relu)
+        pred = tf.layers.dense(h2, 1)
         return pred
 
     def add_loss_op(self, pred):
