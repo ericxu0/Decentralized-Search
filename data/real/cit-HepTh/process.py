@@ -2,6 +2,8 @@
 
 import glob
 from collections import defaultdict
+from sklearn.feature_extraction.text import TfidfVectorizer
+from scipy.sparse import coo_matrix
 
 titles = {}
 authors = {}
@@ -101,3 +103,14 @@ for x in graph.keys():
     for y in graph[x]:
         edgeList.write(str(x) + " " + str(y) + "\n")
 
+nodeList = list(graph.keys())
+contents = []
+for x in nodeList:
+    content = titles[x] + " " + titles[x] + " " + abstracts[x] # titles weighted 2x
+    contents.append(content)
+
+tfidfFile = open('cit-HepTh-subset.tfidf', 'w')
+tfidf = TfidfVectorizer()
+cx = coo_matrix(tfidf.fit_transform(contents))
+for i, j, v in zip(cx.row, cx.col, cx.data):
+    tfidfFile.write("(%d, %d), %s\n" % (nodeList[i], j, v))
