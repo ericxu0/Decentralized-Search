@@ -23,6 +23,7 @@ using namespace Spectra;
 map<int, double> clustCf;
 
 bool IS_CITATION = false;
+double AVG_PATH_LEN = 0.0;
 
 double predictPathLength(PUNGraph& G, int cur, int dst, const set<int>& visited, const string& weightsStr) {
     TUNGraph::TNodeI curNI = G->GetNI(cur);

@@ -18,6 +18,8 @@ using namespace Eigen;
 using namespace Spectra;
 namespace fs = ::boost::filesystem;
 
+const int INFTY = 1<<28;
+
 map<int, pair<double, double> > spectral_embeddings;
 map<int, vector<double> > node2vec_embeddings;
 map<int, vector<int> > similarity_features;
@@ -224,9 +226,7 @@ void clearSimilarityCache() {
 
 double getSimilarity(int a, int b, bool isCitation) {
     if (b > a) {
-        int t = a;
-        a = b;
-        b = t;
+        swap(a, b);
     }
 
     auto it = similarityCache.find(a);
@@ -259,6 +259,45 @@ double getSimilarity(int a, int b, bool isCitation) {
     }
     similarityCache[a][b] = result;
     return result;
+}
+
+void normalizeSimilarity(PUNGraph& G, bool isCitation) {
+    double maxSim = 0;
+    for (TUNGraph::TNodeI NI1 = G->BegNI(); NI1 < G->EndNI(); NI1++)
+        for (TUNGraph::TNodeI NI2 = G->BegNI(); NI2 < G->EndNI(); NI2++)
+            maxSim = max(maxSim, getSimilarity(NI1.GetId(), NI2.GetId(), isCitation));
+
+    for (TUNGraph::TNodeI NI1 = G->BegNI(); NI1 < G->EndNI(); NI1++)
+        for (TUNGraph::TNodeI NI2 = G->BegNI(); NI2 < G->EndNI(); NI2++) {
+            int a = NI1.GetId();
+            int b = NI2.GetId();
+            if (a >= b) {
+                similarityCache[a][b] /= maxSim;
+            }
+        }
+}
+
+double computeShortestPath(PUNGraph& G, map<int, int>& compIdx, vector<vector<int> >& minDist) {
+    int N = G->GetNodes();
+    for (int i = 0; i < N; i++)
+        minDist.push_back(vector<int>(N, INFTY));
+    for (int i = 0; i < N; i++)
+        minDist[i][i] = 0;
+    for (TUNGraph::TEdgeI EI = G->BegEI(); EI < G->EndEI(); EI++) {
+        int a = compIdx[EI.GetSrcNId()];
+        int b = compIdx[EI.GetDstNId()];
+        minDist[a][b] = minDist[b][a] = 1; // undirected
+    }
+    for (int k = 0; k < N; k++)
+        for (int i = 0; i < N; i++)
+            for (int j = 0; j < N; j++)
+                minDist[i][j] = min(minDist[i][j], minDist[i][k] + minDist[k][j]);
+
+    double avg = 0.0;
+    for (int i = 0; i < N; i++)
+        for (int j = i + 1; j < N; j++)
+            avg += minDist[i][j];
+    return avg/(N*(N - 1)/2);
 }
 
 // Returns a random neighbor, or -1 if there are none.

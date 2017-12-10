@@ -27,10 +27,9 @@ const string GRAPH_EXTENSION = ".edges";
 const int NUM_SAMPLES = 10000;
 const int NUM_WALKS = 1000;
 const int SEED = 224;
-const int INFTY = 1<<28;
 const double PROB_RANDOM = 1.0/3;
 
-void getFeatureVector(PUNGraph& G, int cur, int dst, set<int>& visited, map<int, double>& clusterCf, vector<double>& feat, double isCitation) {
+void getFeatureVector(PUNGraph& G, int cur, int dst, set<int>& visited, map<int, double>& clusterCf, vector<double>& feat, double isCitation, double avg_path_len) {
     TUNGraph::TNodeI curNI = G->GetNI(cur);
     int visitedNeighbors = 0;
     for (int i = 0; i < curNI.GetOutDeg(); i++) {
@@ -41,15 +40,17 @@ void getFeatureVector(PUNGraph& G, int cur, int dst, set<int>& visited, map<int,
 
     //feat.push_back(G->GetNodes());                      // graph nodes
     //feat.push_back(G->GetEdges());                      // graph edges
+    feat.push_back(avg_path_len);
     feat.push_back(getSimilarity(cur, dst, isCitation));  // similarity
     feat.push_back(curNI.GetOutDeg());                  // degree
     feat.push_back(clusterCf[cur]);                     // clustering coefficient
     feat.push_back(visited.find(cur) == visited.end()); // 1 if unvisited, 0 if visited
-    feat.push_back(visitedNeighbors);                   // number of visited neighbors
+    //feat.push_back(visitedNeighbors);                   // number of visited neighbors
     feat.push_back(fracVisited);                        // fraction of visited neighbors
-    feat.push_back(getNode2VecL1Dist(cur, dst)); // L1 distance of node2vec
-    feat.push_back(getNode2VecL2Dist(cur, dst)); // L2 distance of node2vec
-    feat.push_back(getNode2VecLInfDist(cur, dst)); // LInfinity distance of node2vec
+    feat.push_back(0); //TODO: EVN Probability
+    //feat.push_back(getNode2VecL1Dist(cur, dst)); // L1 distance of node2vec
+    //feat.push_back(getNode2VecL2Dist(cur, dst)); // L2 distance of node2vec
+    //feat.push_back(getNode2VecLInfDist(cur, dst)); // LInfinity distance of node2vec
     feat.push_back(1);                                  // constant term for linear regression
 }
 
@@ -110,23 +111,6 @@ void getSamples(PUNGraph& G, vector<pair<int, int> >& samples) {
     }
 }
 
-void computeShortestPath(PUNGraph& G, map<int, int>& compIdx, vector<vector<int> >& minDist) {
-    int N = G->GetNodes();
-    for (int i = 0; i < N; i++)
-        minDist.push_back(vector<int>(N, INFTY));
-    for (int i = 0; i < N; i++)
-        minDist[i][i] = 0;
-    for (TUNGraph::TEdgeI EI = G->BegEI(); EI < G->EndEI(); EI++) {
-        int a = compIdx[EI.GetSrcNId()];
-        int b = compIdx[EI.GetDstNId()];
-        minDist[a][b] = minDist[b][a] = 1; // undirected
-    }
-    for (int k = 0; k < N; k++)
-        for (int i = 0; i < N; i++)
-            for (int j = 0; j < N; j++)
-                minDist[i][j] = min(minDist[i][j], minDist[i][k] + minDist[k][j]);
-}
-
 void getTrainingData(const string& filename, ofstream& dataFile, bool isCitation) {
     cout << "\nGenerating training data on " << filename << endl;
     PUNGraph G = TSnap::LoadEdgeList<PUNGraph>(filename.c_str(), 0, 1);
@@ -143,13 +127,15 @@ void getTrainingData(const string& filename, ofstream& dataFile, bool isCitation
         compIdx[NI.GetId()] = index++;
 
     vector<vector<int> > minDist;
-    computeShortestPath(G, compIdx, minDist);
+    double avg_path_len = computeShortestPath(G, compIdx, minDist);
     
     //spectral_embeddings.clear();
     //generateSpectralEmbeddings(G, compIdx);
     node2vec_embeddings.clear();
     generateNode2vecEmbeddings(filename);
     generateSimilarityFeatures(filename, isCitation);
+    clearSimilarityCache();
+    normalizeSimilarity(G, isCitation);
 
     map<int, double> clusterCf;
     for (TUNGraph::TNodeI NI = G->BegNI(); NI < G->EndNI(); NI++)
@@ -168,7 +154,7 @@ void getTrainingData(const string& filename, ofstream& dataFile, bool isCitation
             visited.insert(path[i]);
         
         vector<double> feat;
-        getFeatureVector(G, randomNeighbor(G->GetNI(path[pidx])), s.second, visited, clusterCf, feat, isCitation);
+        getFeatureVector(G, randomNeighbor(G->GetNI(path[pidx])), s.second, visited, clusterCf, feat, isCitation, avg_path_len);
 
         int total = 0;
         for (int j = 0; j < NUM_WALKS; j++) {

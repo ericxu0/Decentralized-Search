@@ -124,6 +124,9 @@ void experiment(const string& filename, bool isCitation) {
     for (TUNGraph::TNodeI NI = G->BegNI(); NI < G->EndNI(); NI++)
         compIdx[NI.GetId()] = index++;
 
+    vector<vector<int> > minDist;
+    AVG_PATH_LEN = computeShortestPath(G, compIdx, minDist);
+
     //spectral_embeddings.clear();
     //generateSpectralEmbeddings(G, compIdx);
     node2vec_embeddings.clear();
@@ -136,6 +139,7 @@ void experiment(const string& filename, bool isCitation) {
 
     IS_CITATION = isCitation;
     clearSimilarityCache();
+    normalizeSimilarity(G, isCitation);
     
     cout << "Simulating random unvisited strategy\n";
     simulate(G, samples, randomUnvisitedStrategy);
