@@ -1,5 +1,5 @@
 #!/bin/sh -x
-find . -type f -name '*.edges' | while read line; do
+find ./data/synthetic -type f -name 'smallworld?.txt' | while read line; do
 	home="."
 	extension=".emb"
 	output=$home$(echo $line | cut -f 2 -d '.')$extension

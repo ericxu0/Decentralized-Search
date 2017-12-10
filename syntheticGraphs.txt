@@ -1,0 +1,172 @@
+Running experiment on data/synthetic/gnm0.txt
+# Nodes: 10000
+# Edges: 100000
+# Nodes (Max WCC): 10000
+# Edges (Max WCC): 100000
+
+Simulating random unvisited strategy
+Success rate: 87.3%
+Average path length: 323.984
+Length <=    10:  2.2%
+Length <=   100: 20.3%
+Length <=  1000: 87.3%
+
+Simulating degree strategy
+Success rate: 93.6%
+Average path length: 285.551
+Length <=    10:  3.3%
+Length <=   100: 26.0%
+Length <=  1000: 93.6%
+
+Simulating node2vec L1 embedding strategy
+Success rate: 100%
+Average path length: 10.196
+Length <=    10: 66.8%
+Length <=   100: 100.0%
+Length <=  1000: 100.0%
+
+Simulating node2vec L2 embedding strategy
+Success rate: 100%
+Average path length: 9.279
+Length <=    10: 73.6%
+Length <=   100: 99.9%
+Length <=  1000: 100.0%
+
+Optimal
+Success rate: 100%
+Average path length: 3.382
+Length <=    10: 100.0%
+Length <=   100: 100.0%
+Length <=  1000: 100.0%
+
+Finished Experiment
+
+Running experiment on data/synthetic/smallworld0.txt
+# Nodes: 10000
+# Edges: 99962
+# Nodes (Max WCC): 10000
+# Edges (Max WCC): 99962
+
+Simulating random unvisited strategy
+Success rate: 81.7%
+Average path length: 363.93
+Length <=    10:  1.7%
+Length <=   100: 15.1%
+Length <=  1000: 81.7%
+
+Simulating degree strategy
+Success rate: 91.5%
+Average path length: 322.079
+Length <=    10:  2.4%
+Length <=   100: 21.1%
+Length <=  1000: 91.5%
+
+Simulating node2vec L1 embedding strategy
+Success rate: 100%
+Average path length: 5.712
+Length <=    10: 93.9%
+Length <=   100: 100.0%
+Length <=  1000: 100.0%
+
+Simulating node2vec L2 embedding strategy
+Success rate: 100%
+Average path length: 5.309
+Length <=    10: 96.4%
+Length <=   100: 100.0%
+Length <=  1000: 100.0%
+
+Optimal
+Success rate: 100%
+Average path length: 3.522
+Length <=    10: 100.0%
+Length <=   100: 100.0%
+Length <=  1000: 100.0%
+
+Finished Experiment
+
+Running experiment on data/synthetic/powerlaw0.txt
+# Nodes: 10000
+# Edges: 13925
+# Nodes (Max WCC): 8441
+# Edges (Max WCC): 13056
+
+Simulating random unvisited strategy
+Success rate: 56.7%
+Average path length: 119.757
+Length <=    10: 30.1%
+Length <=   100: 43.5%
+Length <=  1000: 56.7%
+
+Simulating degree strategy
+Success rate: 65.2%
+Average path length: 89.3328
+Length <=    10: 43.7%
+Length <=   100: 52.5%
+Length <=  1000: 65.2%
+
+Simulating node2vec L1 embedding strategy
+Success rate: 100%
+Average path length: 4.536
+Length <=    10: 98.6%
+Length <=   100: 99.9%
+Length <=  1000: 100.0%
+
+Simulating node2vec L2 embedding strategy
+Success rate: 100%
+Average path length: 4.139
+Length <=    10: 99.3%
+Length <=   100: 99.8%
+Length <=  1000: 100.0%
+
+Optimal
+Success rate: 100%
+Average path length: 3.64
+Length <=    10: 100.0%
+Length <=   100: 100.0%
+Length <=  1000: 100.0%
+
+Finished Experiment
+
+Running experiment on data/synthetic/prefattach0.txt
+# Nodes: 10000
+# Edges: 99945
+# Nodes (Max WCC): 10000
+# Edges (Max WCC): 99945
+
+Simulating random unvisited strategy
+Success rate: 94%
+Average path length: 243.044
+Length <=    10:  5.0%
+Length <=   100: 33.6%
+Length <=  1000: 94.0%
+
+Simulating degree strategy
+Success rate: 99.5%
+Average path length: 73.0965
+Length <=    10: 26.5%
+Length <=   100: 79.5%
+Length <=  1000: 99.5%
+
+Simulating node2vec L1 embedding strategy
+Success rate: 100%
+Average path length: 4.288
+Length <=    10: 97.9%
+Length <=   100: 100.0%
+Length <=  1000: 100.0%
+
+Simulating node2vec L2 embedding strategy
+Success rate: 100%
+Average path length: 3.948
+Length <=    10: 98.6%
+Length <=   100: 100.0%
+Length <=  1000: 100.0%
+
+Optimal
+Success rate: 100%
+Average path length: 3.052
+Length <=    10: 100.0%
+Length <=   100: 100.0%
+Length <=  1000: 100.0%
+
+Finished Experiment
+

@@ -91,6 +91,8 @@ void getSamples(PUNGraph& G, vector<pair<int, int> >& samples, int numSamples) {
     }
 }
 
+const string GRAPH_NAME = "twitter";
+
 string getBase(string s) {
     int idx = s.size() - 1;
     while (idx >= 0 && s[idx] != '.')
@@ -181,11 +183,26 @@ void getRegressionWeights(const string& filename, bool isCitation, bool useNode2
     while (idx >= 0 && base[idx] != '/')
         idx--;
     string num = base.substr(idx + 1, base.size() - idx - 1);
+
     string path;
     if (isCitation) {
         path = "data/training_data/Ridge_cit-HepTh-subset" + suffix + ".weights";
     } else {
         path = "data/training_data/Ridge_facebook-" + num + suffix + ".weights";
+
+    // string types[] = {"L1", "L2"};
+    // for (string& cur : types) {
+    //     string path = "data/training_data/" + cur + "_" + GRAPH_NAME + "_" + num + ".weights";
+    //     ifstream fin(path);
+    //     double x;
+    //     while (fin >> x) {
+    //         if (cur == "L1")
+    //             l1RegWeights.push_back(x);
+    //         else
+    //             l2RegWeights.push_back(x);
+    //     }
+    //     fin.close();
+
     }
     ifstream fin(path);
     double x;
