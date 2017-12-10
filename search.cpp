@@ -130,8 +130,10 @@ void experiment(const string& filename) {
     generateNode2vecEmbeddings(filename);
     similarity_features.clear();
     generateSimilarityFeatures(filename);
-    l1RegWeights.clear();
-    l2RegWeights.clear();
+    lassoWeights.clear();
+    olsWeights.clear();
+    elasticNetWeights.clear();
+    ridgeWeights.clear();
     getRegressionWeights(filename);
 
     vector<pair<int, int> > samples;
@@ -165,13 +167,19 @@ void experiment(const string& filename) {
     simulate(G, samples, similarityStrategy);
 
     cout << "Simulating EVN\n";
-    simulate(G, samples, EVNStrategy);
+    simulate(G, samples, evnStrategy);
 
-    cout << "Simulating linear regression L1 strategy\n";
-    simulate(G, samples, LinRegL1Strategy);
+    cout << "Simulating OLS strategy\n";
+    simulate(G, samples, olsStrategy);
 
-        cout << "Simulating linear regression L2 strategy\n";
-    simulate(G, samples, LinRegL2Strategy);
+    cout << "Simulating Lasso strategy\n";
+    simulate(G, samples, lassoStrategy);
+
+    cout << "Simulating Elastic Net strategy\n";
+    simulate(G, samples, elasticNetStrategy);
+
+    cout << "Simulating Ridge strategy\n";
+    simulate(G, samples, ridgeStrategy);
 
     // cout << "Simulating neural network strategy\n";
     // printf("Starting Strategy\n");
@@ -209,7 +217,7 @@ int main() {
     vector<string> allEdgeFiles = getAllFiles(facebookRoot, GRAPH_EXTENSION);
     for(auto&& fileName : allEdgeFiles) {
         string fullFileName = facebookRoot + fileName;
-        if (fileName == "0.edges")
+        //if (fileName == "0.edges")
             experiment(fullFileName);
     }
 

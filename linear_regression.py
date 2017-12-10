@@ -3,7 +3,7 @@
 import matplotlib.pyplot as plot
 import random
 from collections import Counter
-from sklearn.linear_model import LinearRegression, Lasso
+from sklearn.linear_model import LinearRegression, Lasso, ElasticNet, Ridge
 from sklearn.preprocessing import PolynomialFeatures
 from os import listdir
 from os.path import isfile, join
@@ -48,8 +48,9 @@ for filePath in files:
         trainX = poly.fit_transform(trainX)
         testX = poly.fit_transform(testX)
 
-    linreg = LinearRegression(fit_intercept=False, normalize=False, copy_X=True, n_jobs=1)
+    #linreg = LinearRegression(fit_intercept=False, normalize=False, copy_X=True, n_jobs=1)
     #linreg = Lasso()
+    linreg = Ridge()
     linreg.fit(trainX, trainY)
     predictedY = linreg.predict(testX)
 
@@ -61,10 +62,11 @@ for filePath in files:
     # print "Score: " + str(linreg.score(testX, testY))
     idx = filePath[:filePath.rfind('_')].rfind('_')
     id_num = filePath[idx + 1:filePath.rfind('.')]
-    outputPath = fileDir + "L2_" + id_num + ".weights"
+    outputPath = fileDir + "Ridge_" + id_num + ".weights"
     outputFile = open(outputPath, "w")
     outputFile.write(str(linreg.coef_)[1:-1])
     outputFile.close()
+    print "Coef:", linreg.coef_
 
     # plot.scatter(testY, predictedY, s=sizes(testY, predictedY), marker='.', facecolor='none', edgecolor='b')
     # plot.title("Actual vs. Predicted Path Lengths")

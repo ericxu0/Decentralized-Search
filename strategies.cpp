@@ -22,7 +22,7 @@ using namespace Spectra;
 
 map<int, double> clustCf;
 
-double predictPathLength(PUNGraph& G, int cur, int dst, const set<int>& visited, bool is_l1) {
+double predictPathLength(PUNGraph& G, int cur, int dst, const set<int>& visited, const string& weightsStr) {
     TUNGraph::TNodeI curNI = G->GetNI(cur);
     int visitedNeighbors = 0;
     for (int i = 0; i < curNI.GetOutDeg(); i++) {
@@ -56,10 +56,14 @@ double predictPathLength(PUNGraph& G, int cur, int dst, const set<int>& visited,
     //double weights[] = {-1.20790353e-01, -1.16367699e-03,  2.88583429e-01,  6.19656527e-02, 5.06394477e-02,  1.87175770e+00}; // TODO: for 107.edges
     //double weights[] = {-0.21352646,-0.01762945, 0.11491546,-0.31480496, 0.32982428, 0.3627876}; // TODO: for 0.edges
     vector<double> w;
-    if (is_l1)
-        w = l1RegWeights;
-    else
-        w = l2RegWeights;
+    if (weightsStr == "Lasso")
+        w = lassoWeights;
+    else if (weightsStr == "OLS")
+        w = olsWeights;
+    else if (weightsStr == "ElasticNet")
+        w = elasticNetWeights;
+    else if (weightsStr == "Ridge")
+        w = ridgeWeights;
 
     assert(feat.size() == w.size());
     double dot = 0.0;
@@ -68,7 +72,7 @@ double predictPathLength(PUNGraph& G, int cur, int dst, const set<int>& visited,
     return dot;
 }
 
-int LinRegL1Strategy(PUNGraph& G, int cur, int dst, const set<int>& visited) {
+int lassoStrategy(PUNGraph& G, int cur, int dst, const set<int>& visited) {
     TUNGraph::TNodeI NI = G->GetNI(cur);
     double bestVal = 1E20;
     vector<int> choices;
@@ -76,7 +80,7 @@ int LinRegL1Strategy(PUNGraph& G, int cur, int dst, const set<int>& visited) {
         int nxt = NI.GetOutNId(i);
         if (visited.find(nxt) != visited.end())
             continue;
-        double nxtVal = predictPathLength(G, nxt, dst, visited, true);
+        double nxtVal = predictPathLength(G, nxt, dst, visited, "Lasso");
         if (nxtVal < bestVal) {
             bestVal = nxtVal;
             choices.clear();
@@ -89,7 +93,7 @@ int LinRegL1Strategy(PUNGraph& G, int cur, int dst, const set<int>& visited) {
     return randomElement(choices);
 }
 
-int LinRegL2Strategy(PUNGraph& G, int cur, int dst, const set<int>& visited) {
+int olsStrategy(PUNGraph& G, int cur, int dst, const set<int>& visited) {
     TUNGraph::TNodeI NI = G->GetNI(cur);
     double bestVal = 1E20;
     vector<int> choices;
@@ -97,7 +101,49 @@ int LinRegL2Strategy(PUNGraph& G, int cur, int dst, const set<int>& visited) {
         int nxt = NI.GetOutNId(i);
         if (visited.find(nxt) != visited.end())
             continue;
-        double nxtVal = predictPathLength(G, nxt, dst, visited, false);
+        double nxtVal = predictPathLength(G, nxt, dst, visited, "OLS");
+        if (nxtVal < bestVal) {
+            bestVal = nxtVal;
+            choices.clear();
+        }
+        if (bestVal == nxtVal)
+            choices.push_back(nxt);
+    }
+    if (choices.size() == 0)
+        return randomNeighbor(NI);
+    return randomElement(choices);
+}
+
+int elasticNetStrategy(PUNGraph& G, int cur, int dst, const set<int>& visited) {
+    TUNGraph::TNodeI NI = G->GetNI(cur);
+    double bestVal = 1E20;
+    vector<int> choices;
+    for (int i = 0; i < NI.GetOutDeg(); i++) {
+        int nxt = NI.GetOutNId(i);
+        if (visited.find(nxt) != visited.end())
+            continue;
+        double nxtVal = predictPathLength(G, nxt, dst, visited, "ElasticNet");
+        if (nxtVal < bestVal) {
+            bestVal = nxtVal;
+            choices.clear();
+        }
+        if (bestVal == nxtVal)
+            choices.push_back(nxt);
+    }
+    if (choices.size() == 0)
+        return randomNeighbor(NI);
+    return randomElement(choices);
+}
+
+int ridgeStrategy(PUNGraph& G, int cur, int dst, const set<int>& visited) {
+    TUNGraph::TNodeI NI = G->GetNI(cur);
+    double bestVal = 1E20;
+    vector<int> choices;
+    for (int i = 0; i < NI.GetOutDeg(); i++) {
+        int nxt = NI.GetOutNId(i);
+        if (visited.find(nxt) != visited.end())
+            continue;
+        double nxtVal = predictPathLength(G, nxt, dst, visited, "Ridge");
         if (nxtVal < bestVal) {
             bestVal = nxtVal;
             choices.clear();
@@ -235,7 +281,7 @@ double q(int sim) {
     return mapSimilarityToEdgeProbability[sim];
 }
 
-int EVNStrategy(PUNGraph& G, int cur, int dst, const set<int>& visited) {
+int evnStrategy(PUNGraph& G, int cur, int dst, const set<int>& visited) {
     // We want to maximize p_st = 1 - (1 - q_st)^k
     // Equivalent to minimizing (1 - q_st)^k
     // Equivalent to minimizing log(1 - q_st) * k

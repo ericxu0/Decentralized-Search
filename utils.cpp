@@ -21,8 +21,10 @@ namespace fs = ::boost::filesystem;
 map<int, pair<double, double> > spectral_embeddings;
 map<int, vector<double> > node2vec_embeddings;
 map<int, vector<int> > similarity_features;
-vector<double> l1RegWeights;
-vector<double> l2RegWeights;
+vector<double> lassoWeights;
+vector<double> olsWeights;
+vector<double> elasticNetWeights;
+vector<double> ridgeWeights;
 
 string getBase(string s) {
     int idx = s.size() - 1;
@@ -125,16 +127,22 @@ void getRegressionWeights(const string& filename) {
     while (idx >= 0 && base[idx] != '/')
         idx--;
     string num = base.substr(idx + 1, base.size() - idx - 1);
-    string types[] = {"L1", "L2"};
+    string types[] = {"L1", "L2", "ElasticNet", "Ridge"};
     for (string& cur : types) {
         string path = "data/training_data/" + cur + "_facebook_" + num + ".weights";
         ifstream fin(path);
         double x;
         while (fin >> x) {
             if (cur == "L1")
-                l1RegWeights.push_back(x);
+                lassoWeights.push_back(x);
+            else if (cur == "L2")
+                olsWeights.push_back(x);
+            else if (cur == "ElasticNet")
+                elasticNetWeights.push_back(x);
+            else if (cur == "Ridge")
+                ridgeWeights.push_back(x);
             else
-                l2RegWeights.push_back(x);
+                cout << "what is this cur? " << cur << endl;
         }
         fin.close();
     }
