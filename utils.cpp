@@ -20,16 +20,80 @@ namespace fs = ::boost::filesystem;
 
 const int INFTY = 1<<28;
 
-map<int, pair<double, double> > spectral_embeddings;
+double AVG_PATH_LEN;
+map<int, double> clusterCf;
 map<int, vector<double> > node2vec_embeddings;
 map<int, vector<int> > similarity_features;
 map<int, map<int, double> > tfidf;
-vector<double> lassoWeights;
-vector<double> olsWeights;
-vector<double> elasticNetWeights;
-vector<double> ridgeWeights;
 
+vector<double> ridgeWeights;
 map<int, map<int, double> > similarityCache;
+
+const int CHUNKS = 100;
+double discretizedQ[CHUNKS + 1];
+
+PUNGraph loadGraph(string filename) {
+    PUNGraph G = TSnap::LoadEdgeList<PUNGraph>(filename.c_str(), 0, 1);
+    cout << "# Nodes: " << G->GetNodes() << endl;
+    cout << "# Edges: " << G->GetEdges() << endl;
+    G = TSnap::GetMxWcc(G);
+    TSnap::DelSelfEdges(G);
+    cout << "# Nodes (Max WCC): " << G->GetNodes() << endl;
+    cout << "# Edges (Max WCC): " << G->GetEdges() << endl;
+    cout << endl;
+    return G;
+}
+
+void computeCompressionIndices(PUNGraph G, map<int, int>& compIdx) {
+    int index = 0;
+    for (TUNGraph::TNodeI NI = G->BegNI(); NI < G->EndNI(); NI++)
+        compIdx[NI.GetId()] = index++;
+}
+
+void computeClusterCf(PUNGraph G) {
+    clusterCf.clear();
+    for (TUNGraph::TNodeI NI = G->BegNI(); NI < G->EndNI(); NI++)
+        clusterCf[NI.GetId()] = TSnap::GetNodeClustCf(G, NI.GetId());
+}
+
+void computeShortestPaths(PUNGraph& G, map<int, int>& compIdx, vector<vector<int> >& minDist) {
+    int N = G->GetNodes();
+    for (int i = 0; i < N; i++)
+        minDist.push_back(vector<int>(N, INFTY));
+    for (int i = 0; i < N; i++)
+        minDist[i][i] = 0;
+    for (TUNGraph::TEdgeI EI = G->BegEI(); EI < G->EndEI(); EI++) {
+        int a = compIdx[EI.GetSrcNId()];
+        int b = compIdx[EI.GetDstNId()];
+        minDist[a][b] = minDist[b][a] = 1; // undirected
+    }
+    for (int k = 0; k < N; k++)
+        for (int i = 0; i < N; i++)
+            for (int j = 0; j < N; j++)
+                minDist[i][j] = min(minDist[i][j], minDist[i][k] + minDist[k][j]);
+
+    double avg = 0.0;
+    for (int i = 0; i < N; i++)
+        for (int j = i + 1; j < N; j++)
+            avg += minDist[i][j];
+    AVG_PATH_LEN = avg/(N*(N - 1)/2);
+}
+
+void getSamples(PUNGraph& G, vector<pair<int, int> >& samples, int numSamples) {
+    vector<int> nodes;
+    for (TUNGraph::TNodeI NI = G->BegNI(); NI < G->EndNI(); NI++)
+        nodes.push_back(NI.GetId());
+    int N = nodes.size();
+
+    for (int i = 0; i < numSamples; ) {
+        int src = nodes[rand() % N];
+        int dst = nodes[rand() % N];
+        if (src != dst) {
+            samples.push_back(make_pair(src, dst));
+            i++;
+        }
+    }
+}
 
 string getBase(string s) {
     int idx = s.size() - 1;
@@ -37,6 +101,7 @@ string getBase(string s) {
         idx--;
     return s.substr(0, idx);
 }
+
 
 // return the filenames of all files that have the specified extension
 // in the specified directory and all subdirectories
@@ -144,41 +209,26 @@ void generateSimilarityFeatures(const string& filename, bool isCitation) {
     }
 }
 
-void getRegressionWeights(const string& filename, bool isCitation) {
-    lassoWeights.clear();
-    olsWeights.clear();
-    elasticNetWeights.clear();
+void getRegressionWeights(const string& filename, bool isCitation, bool useNode2Vec) {
     ridgeWeights.clear();
 
     string base = getBase(filename);
+    string suffix = useNode2Vec ? "_n2v" : "_sim";
     int idx = base.size() - 1;
     while (idx >= 0 && base[idx] != '/')
         idx--;
     string num = base.substr(idx + 1, base.size() - idx - 1);
-    string types[] = {"LinearRegression", "Lasso", "ElasticNet", "Ridge"};
-    for (string& cur : types) {
-        string path;
-        if (isCitation) {
-            path = "data/training_data/" + cur + "_cit-HepTh-subset.weights";
-        } else {
-            path = "data/training_data/" + cur + "_facebook_" + num + ".weights";
-        }
-        ifstream fin(path);
-        double x;
-        while (fin >> x) {
-            if (cur == "Lasso")
-                lassoWeights.push_back(x);
-            else if (cur == "LinearRegression")
-                olsWeights.push_back(x);
-            else if (cur == "ElasticNet")
-                elasticNetWeights.push_back(x);
-            else if (cur == "Ridge")
-                ridgeWeights.push_back(x);
-            else
-                cout << "what is this cur? " << cur << endl;
-        }
-        fin.close();
+    string path;
+    if (isCitation) {
+        path = "data/training_data/Ridge_cit-HepTh-subset" + suffix + ".weights";
+    } else {
+        path = "data/training_data/Ridge_facebook-" + num + suffix + ".weights";
     }
+    ifstream fin(path);
+    double x;
+    while (fin >> x)
+        ridgeWeights.push_back(x);
+    fin.close();
 }
 
 /*
@@ -319,9 +369,6 @@ void normalizeSimilarity(PUNGraph& G, int similarityMethod) {
     }
 }
 
-const int CHUNKS = 100;
-double discretizedQ[CHUNKS + 1];
-
 void computeDiscretizedQ(PUNGraph& G) {
     // compute all pairwise similarity
     int counts[CHUNKS + 1];
@@ -356,27 +403,23 @@ double pst(PUNGraph& G, int src, int target) {
     return 1.0 - pow(1.0 - qst(similarityCache[src][target]), G->GetNI(src).GetOutDeg());
 }
 
-double computeShortestPath(PUNGraph& G, map<int, int>& compIdx, vector<vector<int> >& minDist) {
-    int N = G->GetNodes();
-    for (int i = 0; i < N; i++)
-        minDist.push_back(vector<int>(N, INFTY));
-    for (int i = 0; i < N; i++)
-        minDist[i][i] = 0;
-    for (TUNGraph::TEdgeI EI = G->BegEI(); EI < G->EndEI(); EI++) {
-        int a = compIdx[EI.GetSrcNId()];
-        int b = compIdx[EI.GetDstNId()];
-        minDist[a][b] = minDist[b][a] = 1; // undirected
+void getFeatureVector(PUNGraph& G, int cur, int dst, const set<int>& visited, vector<double>& feat) {
+    TUNGraph::TNodeI curNI = G->GetNI(cur);
+    int visitedNeighbors = 0;
+    for (int i = 0; i < curNI.GetOutDeg(); i++) {
+        int x = curNI.GetOutNId(i);
+        visitedNeighbors += visited.find(x) != visited.end();
     }
-    for (int k = 0; k < N; k++)
-        for (int i = 0; i < N; i++)
-            for (int j = 0; j < N; j++)
-                minDist[i][j] = min(minDist[i][j], minDist[i][k] + minDist[k][j]);
+    double fracVisited = 1.0 * visitedNeighbors / curNI.GetOutDeg();
 
-    double avg = 0.0;
-    for (int i = 0; i < N; i++)
-        for (int j = i + 1; j < N; j++)
-            avg += minDist[i][j];
-    return avg/(N*(N - 1)/2);
+    feat.push_back(AVG_PATH_LEN);                        // 0. average shortest path length in G
+    feat.push_back(similarityCache[cur][dst]);           // 1. similarity OR L2 distance of node2vec
+    feat.push_back(curNI.GetOutDeg());                   // 3. degree
+    feat.push_back(clusterCf[cur]);                      // 4. clustering coefficient
+    feat.push_back(visited.find(cur) == visited.end());  // 5. 1 if unvisited, 0 if visited
+    feat.push_back(fracVisited);                         // 6. fraction of visited neighbors
+    feat.push_back(pst(G, cur, dst));                    // 7. EVN Probability
+    feat.push_back(1);                                   // 8. constant term for linear regression
 }
 
 // Returns a random neighbor, or -1 if there are none.

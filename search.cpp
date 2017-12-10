@@ -14,7 +14,6 @@
 #include <vector>
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
 
 using namespace std;
 using namespace Eigen;
@@ -22,7 +21,7 @@ using namespace Spectra;
 
 const string GRAPH_EXTENSION = ".edges";
 const int NUM_TRIALS = 10000;
-const int SEED = 42;
+const int TEST_SEED = 42;
 const int CAP = 100;
 const int BUCKETS[] = {3, 10, 30, 100};
 
@@ -90,52 +89,28 @@ void optimal(PUNGraph& G, vector<pair<int, int> >& samples) {
     displayResults(results);
 }
 
-void getSamples(PUNGraph& G, vector<pair<int, int> >& samples) {
-    vector<int> nodes;
-    for (TUNGraph::TNodeI NI = G->BegNI(); NI < G->EndNI(); NI++)
-        nodes.push_back(NI.GetId());
-    int N = nodes.size();
-
-    srand(SEED);
-    for (int i = 0; i < NUM_TRIALS; ) {
-        int src = nodes[rand() % N];
-        int dst = nodes[rand() % N];
-        if (src != dst) {
-            samples.push_back(make_pair(src, dst));
-            i++;
-        }
-    }
-}
-
 void experiment(const string& filename, bool isCitation) {
     cout << "Running experiment on " << filename << endl;
-    PUNGraph G = TSnap::LoadEdgeList<PUNGraph>(filename.c_str(), 0, 1);
-    cout << "# Nodes: " << G->GetNodes() << endl;
-    cout << "# Edges: " << G->GetEdges() << endl;
-    G = TSnap::GetMxWcc(G);
-    TSnap::DelSelfEdges(G);
-    cout << "# Nodes (Max WCC): " << G->GetNodes() << endl;
-    cout << "# Edges (Max WCC): " << G->GetEdges() << endl;
-    cout << endl;
+    PUNGraph G = loadGraph(filename);
 
     map<int, int> compIdx;
-    int index = 0;
-    for (TUNGraph::TNodeI NI = G->BegNI(); NI < G->EndNI(); NI++)
-        compIdx[NI.GetId()] = index++;
+    computeCompressionIndices(G, compIdx);
 
     vector<vector<int> > minDist;
-    AVG_PATH_LEN = computeShortestPath(G, compIdx, minDist);
-
+    computeShortestPaths(G, compIdx, minDist);
+    computeClusterCf(G);
     generateNode2vecEmbeddings(filename);
     generateSimilarityFeatures(filename, isCitation);
-    getRegressionWeights(filename, isCitation);
 
-    IS_CITATION = isCitation;
     normalizeSimilarity(G, isCitation ? SIMILARITY_TFIDF : SIMILARITY_FEATURES);
     computeDiscretizedQ(G);
+    getRegressionWeights(filename, isCitation, false);
+
+    IS_CITATION = isCitation;
 
     vector<pair<int, int> > samples;
-    getSamples(G, samples);
+    srand(TEST_SEED);
+    getSamples(G, samples, NUM_TRIALS);
     
     cout << "Random unvisited\n";
     simulate(G, samples, randomUnvisitedStrategy);
@@ -150,11 +125,12 @@ void experiment(const string& filename, bool isCitation) {
     simulate(G, samples, evnStrategy);
 
     cout << "Ridge regression (with similarity)\n";
-    simulate(G, samples, ridgeStrategy); // TODO: currently uses node2vec features?
+    simulate(G, samples, ridgeStrategy);
 
     // Replacing similarity with node2vec
     normalizeSimilarity(G, SIMILARITY_NODE2VEC);
     computeDiscretizedQ(G);
+    getRegressionWeights(filename, isCitation, true);
 
     cout << "node2vec L_2\n";
     simulate(G, samples, similarityStrategy);
@@ -163,7 +139,7 @@ void experiment(const string& filename, bool isCitation) {
     simulate(G, samples, evnStrategy);
 
     cout << "Ridge regression (with node2vec)\n";
-    // TODO
+    simulate(G, samples, ridgeStrategy);
 
     cout << "Optimal\n";
     optimal(G, samples);
@@ -172,31 +148,15 @@ void experiment(const string& filename, bool isCitation) {
 }
 
 int main() {
-    //experiment("data/real/facebook_combined.txt");
-    //experiment("data/real/ca-HepTh.txt");
-    //experiment("data/real/cit-HepTh.txt");
-
-    //experiment("data/synthetic/gnm0.txt");
-    //experiment("data/synthetic/smallworld0.txt");
-    //experiment("data/synthetic/powerlaw0.txt");
-    //experiment("data/synthetic/prefattach0.txt");
-    
-    //experiment("data/synthetic/gnm_small0.txt");
-    //experiment("data/synthetic/smallworld_small0.txt");
-    //experiment("data/synthetic/powerlaw_small0.txt");
-    //experiment("data/synthetic/prefattach_small0.txt");
-    
-    //experiment("data/real/facebook/0.edges");
+    experiment("data/real/cit-HepTh/cit-HepTh-subset.edges", true);
 
     string facebookRoot = "data/real/facebook/";
     vector<string> allEdgeFiles = getAllFiles(facebookRoot, GRAPH_EXTENSION);
     for(auto&& fileName : allEdgeFiles) {
         string fullFileName = facebookRoot + fileName;
-        if (fileName == "0.edges")
+        //if (fileName == "0.edges")
             experiment(fullFileName, false);
     }
-
-    experiment("data/real/cit-HepTh/cit-HepTh-subset.edges", true);
 
     return 0;
 }

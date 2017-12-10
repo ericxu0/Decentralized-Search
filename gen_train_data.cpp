@@ -20,33 +20,14 @@ using namespace Spectra;
 
 const bool DEBUG = false;
 const bool WRITE_TO_FILE = true;
-const string DATA_PREFIX = "data/training_data/training_data_10k_";
+const string DATA_PREFIX = "data/training_data/training_data_";
 
 const string GRAPH_EXTENSION = ".edges";
 
 const int NUM_SAMPLES = 10000;
 const int NUM_WALKS = 1000;
-const int SEED = 224;
+const int TRAIN_SEED = 24;
 const double PROB_RANDOM = 1.0/3;
-
-void getFeatureVector(PUNGraph& G, int cur, int dst, set<int>& visited, map<int, double>& clusterCf, vector<double>& feat, double isCitation, double avg_path_len) {
-    TUNGraph::TNodeI curNI = G->GetNI(cur);
-    int visitedNeighbors = 0;
-    for (int i = 0; i < curNI.GetOutDeg(); i++) {
-        int x = curNI.GetOutNId(i);
-        visitedNeighbors += visited.find(x) != visited.end();
-    }
-    double fracVisited = 1.0 * visitedNeighbors / curNI.GetOutDeg();
-
-    feat.push_back(avg_path_len);                        // 0. average shortest path length in G
-    feat.push_back(similarityCache[cur][dst]);           // 1. similarity OR L2 distance of node2vec
-    feat.push_back(curNI.GetOutDeg());                   // 3. degree
-    feat.push_back(clusterCf[cur]);                      // 4. clustering coefficient
-    feat.push_back(visited.find(cur) == visited.end());  // 5. 1 if unvisited, 0 if visited
-    feat.push_back(fracVisited);                         // 6. fraction of visited neighbors
-    feat.push_back(pst(G, cur, dst));                    // 7. EVN Probability TODO
-    feat.push_back(1);                                   // 8. constant term for linear regression
-}
 
 void performWalk(PUNGraph& G, map<int, int>& compIdx, vector<vector<int> >& minDist, int src, int dst, vector<int>& path) {
     int cur = src;
@@ -88,125 +69,94 @@ void performWalk(PUNGraph& G, map<int, int>& compIdx, vector<vector<int> >& minD
     }
 }
 
-void getSamples(PUNGraph& G, vector<pair<int, int> >& samples) {
-    vector<int> nodes;
-    for (TUNGraph::TNodeI NI = G->BegNI(); NI < G->EndNI(); NI++)
-        nodes.push_back(NI.GetId());
-    int N = nodes.size();
-
-    srand(SEED);
-    for (int i = 0; i < NUM_SAMPLES; ) {
-        int src = nodes[rand() % N];
-        int dst = nodes[rand() % N];
-        if (src != dst) {
-            samples.push_back(make_pair(src, dst));
-            i++;
-        }
-    }
-}
-
-void getTrainingData(const string& filename, ofstream& dataFile, bool isCitation) {
-    cout << "\nGenerating training data on " << filename << endl;
-    PUNGraph G = TSnap::LoadEdgeList<PUNGraph>(filename.c_str(), 0, 1);
-    cout << "# Nodes: " << G->GetNodes() << endl;
-    cout << "# Edges: " << G->GetEdges() << endl;
-    G = TSnap::GetMxWcc(G);
-    cout << "# Nodes (Max WCC): " << G->GetNodes() << endl;
-    cout << "# Edges (Max WCC): " << G->GetEdges() << endl;
-    cout << endl;
+void getTrainingData(const string& filename, const string& graphName, bool isCitation) {
+    cout << "\nGenerating training data on " << filename << " (graphName = " << graphName << ")" << endl;
+    PUNGraph G = loadGraph(filename);
 
     map<int, int> compIdx;
-    int index = 0;
-    for (TUNGraph::TNodeI NI = G->BegNI(); NI < G->EndNI(); NI++)
-        compIdx[NI.GetId()] = index++;
+    computeCompressionIndices(G, compIdx);
 
     vector<vector<int> > minDist;
-    double avg_path_len = computeShortestPath(G, compIdx, minDist);
-    
-    //spectral_embeddings.clear();
-    //generateSpectralEmbeddings(G, compIdx);
+    computeShortestPaths(G, compIdx, minDist);
+    computeClusterCf(G);
     generateNode2vecEmbeddings(filename);
     generateSimilarityFeatures(filename, isCitation);
-    normalizeSimilarity(G, isCitation);
-
-    map<int, double> clusterCf;
-    for (TUNGraph::TNodeI NI = G->BegNI(); NI < G->EndNI(); NI++)
-        clusterCf[NI.GetId()] = TSnap::GetNodeClustCf(G, NI.GetId());
 
     vector<pair<int, int> > samples;
-    getSamples(G, samples);
-    for (size_t i = 0; i < samples.size(); i++) {
-        auto& s = samples[i];
+    srand(TRAIN_SEED);
+    getSamples(G, samples, NUM_SAMPLES);
 
-        vector<int> path;
-        performWalk(G, compIdx, minDist, s.first, s.second, path);
-        set<int> visited;
-        int pidx = rand() % path.size();
-        for (int i = 0; i <= pidx; i++)
-            visited.insert(path[i]);
-        
-        vector<double> feat;
-        getFeatureVector(G, randomNeighbor(G->GetNI(path[pidx])), s.second, visited, clusterCf, feat, isCitation, avg_path_len);
+    for (int ii = 0; ii < 2; ii++) {
+        bool node2vec = (ii == 1);
+        if (node2vec)
+            normalizeSimilarity(G, SIMILARITY_NODE2VEC);
+        else
+            normalizeSimilarity(G, isCitation ? SIMILARITY_TFIDF : SIMILARITY_FEATURES);
+        computeDiscretizedQ(G);
 
-        int total = 0;
-        for (int j = 0; j < NUM_WALKS; j++) {
-            vector<int> walk;
-            performWalk(G, compIdx, minDist, path[pidx], s.second, walk);
-            total += walk.size() - 1;
-        }
-        double avgRandomWalkLength = 1.0 * total / NUM_WALKS;
-        double truePathLength = minDist[compIdx[path[pidx]]][compIdx[s.second]];
+        ofstream dataFile;
+        string path = DATA_PREFIX + graphName + (node2vec ? "_n2v" : "_sim") + ".txt";
+        dataFile.open(path);
 
-        if (DEBUG) {
-            cout << "Training pair " << i+1 << ":" << endl;
-            cout << "  Input (feature vector):";
-            for (double f : feat)
-                cout << " " << f;
-            cout << endl;
-            cout << "  Output (true path length): " << truePathLength << endl;
-            cout << "  Output (avg random walk length): " << avgRandomWalkLength << endl;
-        } else if ((i+1) % (NUM_SAMPLES / 10) == 0) {
-            cout << "Finished generating " << (i+1) << " training pairs" << endl;
-        }
+        srand(TRAIN_SEED); // Make performWalk() identical regardless of ii
+        for (size_t i = 0; i < samples.size(); i++) {
+            auto& s = samples[i];
 
-        if (WRITE_TO_FILE) {
-            string sep = "";
-            for (double f : feat) {
-                dataFile << sep << f;
-                sep = " ";
+            vector<int> path;
+            performWalk(G, compIdx, minDist, s.first, s.second, path);
+            set<int> visited;
+            int pidx = rand() % path.size();
+            for (int i = 0; i <= pidx; i++)
+                visited.insert(path[i]);
+
+            vector<double> feat;
+            getFeatureVector(G, randomNeighbor(G->GetNI(path[pidx])), s.second, visited, feat);
+
+            int total = 0;
+            for (int j = 0; j < NUM_WALKS; j++) {
+                vector<int> walk;
+                performWalk(G, compIdx, minDist, path[pidx], s.second, walk);
+                total += walk.size() - 1;
             }
-            dataFile << ", " << truePathLength << ", " << avgRandomWalkLength << endl;
+            double avgRandomWalkLength = 1.0 * total / NUM_WALKS;
+            double truePathLength = minDist[compIdx[path[pidx]]][compIdx[s.second]];
+
+            if (DEBUG) {
+                cout << "Training pair " << i+1 << ":" << endl;
+                cout << "  Input (feature vector):";
+                for (double f : feat)
+                    cout << " " << f;
+                cout << endl;
+                cout << "  Output (true path length): " << truePathLength << endl;
+                cout << "  Output (avg random walk length): " << avgRandomWalkLength << endl;
+            } else if ((i+1) % (NUM_SAMPLES / 10) == 0) {
+                cout << "Finished generating " << (i+1) << " training pairs" << endl;
+            }
+
+            if (WRITE_TO_FILE) {
+                string sep = "";
+                for (double f : feat) {
+                    dataFile << sep << f;
+                    sep = " ";
+                }
+                dataFile << ", " << truePathLength << ", " << avgRandomWalkLength << endl;
+            }
         }
+        dataFile.close();
+        cout << "Wrote training data to file: " << path << endl;
     }
 
     cout << "Finished generating training data." << endl;
 }
 
 int main() {
-    //getTrainingData("data/real/gplus/", dataFile);
-    //getTrainingData("data/real/twitter/", dataFile);
-
     string facebookRoot = "data/real/facebook/";
     vector<string> allEdgeFiles = getAllFiles(facebookRoot, GRAPH_EXTENSION);
     for(auto&& fileName : allEdgeFiles) {
         string fullFileName = facebookRoot + fileName;
-        if (WRITE_TO_FILE) {
-            ofstream dataFile;
-            string path = DATA_PREFIX + "facebook_" + getBase(fileName) + ".txt";
-            dataFile.open(path);
-            getTrainingData(fullFileName, dataFile, false);
-            dataFile.close();
-            cout << "Wrote training data to file: " << path << endl;
-        }
+        getTrainingData(fullFileName, "facebook-" + getBase(fileName), false);
     }
-    if (WRITE_TO_FILE) {
-        ofstream dataFile;
-        string path = DATA_PREFIX + "cit-HepTh-subset.txt";
-        dataFile.open(path);
-        getTrainingData("data/real/cit-HepTh/cit-HepTh-subset.edges", dataFile, true);
-        dataFile.close();
-        cout << "Wrote training data to file: " << path << endl;
-    }
+    getTrainingData("data/real/cit-HepTh/cit-HepTh-subset.edges", "cit-HepTh-subset", true);
 
     return 0;
 }
