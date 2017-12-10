@@ -1,0 +1,561 @@
+Running experiment on data/real/cit-HepTh/cit-HepTh-subset.edges
+# Nodes: 915
+# Edges: 14739
+# Nodes (Max WCC): 913
+# Edges (Max WCC): 14735
+
+Random unvisited
+  Success rate: 87.76%
+  Average path length: 25.7927
+
+Degree
+  Success rate: 93.58%
+  Average path length: 9.67493
+
+Similarity
+  Success rate: 99.06%
+  Average path length: 7.34464
+
+EVN (with similarity)
+  Success rate: 98.86%
+  Average path length: 5.8594
+
+Ridge regression (with similarity)
+  Success rate: 98.72%
+  Average path length: 6.91724
+
+Overall ridge regression (with similarity)
+  Success rate: 98.71%
+  Average path length: 9.36835
+
+node2vec L_2
+  Success rate: 100%
+  Average path length: 4.0098
+
+EVN (with node2vec)
+  Success rate: 99.62%
+  Average path length: 3.46697
+
+Ridge regression (with node2vec)
+  Success rate: 99.55%
+  Average path length: 3.34987
+
+Overall ridge regression (with node2vec)
+  Success rate: 99.87%
+  Average path length: 3.29859
+
+Optimal
+  Success rate: 100%
+  Average path length: 2.5806
+
+
+Running experiment on data/real/facebook/0.edges
+# Nodes: 333
+# Edges: 2519
+# Nodes (Max WCC): 324
+# Edges (Max WCC): 2514
+
+Random unvisited
+  Success rate: 67.81%
+  Average path length: 25.5088
+
+Degree
+  Success rate: 69.96%
+  Average path length: 13.4973
+
+Similarity
+  Success rate: 77.09%
+  Average path length: 20.6738
+
+EVN (with similarity)
+  Success rate: 71.91%
+  Average path length: 15.0243
+
+Ridge regression (with similarity)
+  Success rate: 73.38%
+  Average path length: 14.097
+
+Overall ridge regression (with similarity)
+  Success rate: 85.97%
+  Average path length: 18.5773
+
+node2vec L_2
+  Success rate: 93.62%
+  Average path length: 12.4346
+
+EVN (with node2vec)
+  Success rate: 88.2%
+  Average path length: 15.8675
+
+Ridge regression (with node2vec)
+  Success rate: 95.61%
+  Average path length: 11.0383
+
+Overall ridge regression (with node2vec)
+  Success rate: 97.82%
+  Average path length: 11.1664
+
+Optimal
+  Success rate: 100%
+  Average path length: 3.7406
+
+
+Running experiment on data/real/facebook/107.edges
+# Nodes: 1034
+# Edges: 26749
+# Nodes (Max WCC): 1034
+# Edges (Max WCC): 26749
+
+Random unvisited
+  Success rate: 62.02%
+  Average path length: 29.9134
+
+Degree
+  Success rate: 50.46%
+  Average path length: 8.22969
+
+Similarity
+  Success rate: 91.67%
+  Average path length: 20.065
+
+EVN (with similarity)
+  Success rate: 77.14%
+  Average path length: 19.4747
+
+Ridge regression (with similarity)
+  Success rate: 89.71%
+  Average path length: 17.099
+
+Overall ridge regression (with similarity)
+  Success rate: 88.39%
+  Average path length: 19.3903
+
+node2vec L_2
+  Success rate: 97.74%
+  Average path length: 9.94915
+
+EVN (with node2vec)
+  Success rate: 95.12%
+  Average path length: 8.81518
+
+Ridge regression (with node2vec)
+  Success rate: 96.01%
+  Average path length: 9.13113
+
+Overall ridge regression (with node2vec)
+  Success rate: 97.33%
+  Average path length: 7.06976
+
+Optimal
+  Success rate: 100%
+  Average path length: 2.9416
+
+
+Running experiment on data/real/facebook/1684.edges
+# Nodes: 786
+# Edges: 14024
+# Nodes (Max WCC): 775
+# Edges (Max WCC): 14006
+
+Random unvisited
+  Success rate: 61.5%
+  Average path length: 26.9255
+
+Degree
+  Success rate: 72.02%
+  Average path length: 17.3127
+
+Similarity
+  Success rate: 86.76%
+  Average path length: 23.7163
+
+EVN (with similarity)
+  Success rate: 81.56%
+  Average path length: 23.8621
+
+Ridge regression (with similarity)
+  Success rate: 91.2%
+  Average path length: 20.6908
+
+Overall ridge regression (with similarity)
+  Success rate: 91.35%
+  Average path length: 16.983
+
+node2vec L_2
+  Success rate: 98.71%
+  Average path length: 12.5498
+
+EVN (with node2vec)
+  Success rate: 96.14%
+  Average path length: 11.6468
+
+Ridge regression (with node2vec)
+  Success rate: 98.02%
+  Average path length: 11.8407
+
+Overall ridge regression (with node2vec)
+  Success rate: 98.06%
+  Average path length: 12.117
+
+Optimal
+  Success rate: 100%
+  Average path length: 3.0447
+
+
+Running experiment on data/real/facebook/1912.edges
+# Nodes: 747
+# Edges: 30025
+# Nodes (Max WCC): 744
+# Edges (Max WCC): 30023
+
+Random unvisited
+  Success rate: 74.85%
+  Average path length: 24.9014
+
+Degree
+  Success rate: 74.37%
+  Average path length: 16.5223
+
+Similarity
+  Success rate: 92.33%
+  Average path length: 17.5927
+
+EVN (with similarity)
+  Success rate: 81.78%
+  Average path length: 12.5172
+
+Ridge regression (with similarity)
+  Success rate: 92.97%
+  Average path length: 13.5749
+
+Overall ridge regression (with similarity)
+  Success rate: 95.16%
+  Average path length: 12.1784
+
+node2vec L_2
+  Success rate: 99.18%
+  Average path length: 5.61676
+
+EVN (with node2vec)
+  Success rate: 97.77%
+  Average path length: 5.38233
+
+Ridge regression (with node2vec)
+  Success rate: 98.65%
+  Average path length: 4.70928
+
+Overall ridge regression (with node2vec)
+  Success rate: 99.02%
+  Average path length: 4.68612
+
+Optimal
+  Success rate: 100%
+  Average path length: 2.5607
+
+
+Running experiment on data/real/facebook/3437.edges
+# Nodes: 534
+# Edges: 4813
+# Nodes (Max WCC): 532
+# Edges (Max WCC): 4812
+
+Random unvisited
+  Success rate: 63.38%
+  Average path length: 35.3312
+
+Degree
+  Success rate: 74.21%
+  Average path length: 23.9162
+
+Similarity
+  Success rate: 75.53%
+  Average path length: 29.8246
+
+EVN (with similarity)
+  Success rate: 77.8%
+  Average path length: 22.1044
+
+Ridge regression (with similarity)
+  Success rate: 82.73%
+  Average path length: 22.2086
+
+Overall ridge regression (with similarity)
+  Success rate: 89.73%
+  Average path length: 20.0199
+
+node2vec L_2
+  Success rate: 99.96%
+  Average path length: 9.91887
+
+EVN (with node2vec)
+  Success rate: 99.37%
+  Average path length: 9.64355
+
+Ridge regression (with node2vec)
+  Success rate: 99.26%
+  Average path length: 8.32037
+
+Overall ridge regression (with node2vec)
+  Success rate: 99.5%
+  Average path length: 7.04774
+
+Optimal
+  Success rate: 100%
+  Average path length: 3.4466
+
+
+Running experiment on data/real/facebook/348.edges
+# Nodes: 224
+# Edges: 3192
+# Nodes (Max WCC): 224
+# Edges (Max WCC): 3192
+
+Random unvisited
+  Success rate: 88.26%
+  Average path length: 13.8361
+
+Degree
+  Success rate: 87.99%
+  Average path length: 9.84203
+
+Similarity
+  Success rate: 95.61%
+  Average path length: 11.7566
+
+EVN (with similarity)
+  Success rate: 89.04%
+  Average path length: 8.15948
+
+Ridge regression (with similarity)
+  Success rate: 91.55%
+  Average path length: 9.69634
+
+Overall ridge regression (with similarity)
+  Success rate: 92.97%
+  Average path length: 8.07217
+
+node2vec L_2
+  Success rate: 99.01%
+  Average path length: 5.57479
+
+EVN (with node2vec)
+  Success rate: 95.83%
+  Average path length: 5.28519
+
+Ridge regression (with node2vec)
+  Success rate: 94.82%
+  Average path length: 6.08416
+
+Overall ridge regression (with node2vec)
+  Success rate: 98.47%
+  Average path length: 4.82025
+
+Optimal
+  Success rate: 100%
+  Average path length: 2.5291
+
+
+Running experiment on data/real/facebook/3980.edges
+# Nodes: 52
+# Edges: 146
+# Nodes (Max WCC): 44
+# Edges (Max WCC): 138
+
+Random unvisited
+  Success rate: 99.49%
+  Average path length: 11.067
+
+Degree
+  Success rate: 99.56%
+  Average path length: 8.28566
+
+Similarity
+  Success rate: 99.95%
+  Average path length: 9.86013
+
+EVN (with similarity)
+  Success rate: 99.64%
+  Average path length: 7.17774
+
+Ridge regression (with similarity)
+  Success rate: 99.46%
+  Average path length: 10.6708
+
+Overall ridge regression (with similarity)
+  Success rate: 99.85%
+  Average path length: 6.24697
+
+node2vec L_2
+  Success rate: 100%
+  Average path length: 3.4427
+
+EVN (with node2vec)
+  Success rate: 100%
+  Average path length: 3.4727
+
+Ridge regression (with node2vec)
+  Success rate: 100%
+  Average path length: 3.5962
+
+Overall ridge regression (with node2vec)
+  Success rate: 100%
+  Average path length: 3.0016
+
+Optimal
+  Success rate: 100%
+  Average path length: 2.5474
+
+
+Running experiment on data/real/facebook/414.edges
+# Nodes: 150
+# Edges: 1693
+# Nodes (Max WCC): 148
+# Edges (Max WCC): 1692
+
+Random unvisited
+  Success rate: 88.25%
+  Average path length: 21.0717
+
+Degree
+  Success rate: 88.47%
+  Average path length: 16.3065
+
+Similarity
+  Success rate: 94.58%
+  Average path length: 17.169
+
+EVN (with similarity)
+  Success rate: 95.94%
+  Average path length: 16.5859
+
+Ridge regression (with similarity)
+  Success rate: 89.87%
+  Average path length: 9.55458
+
+Overall ridge regression (with similarity)
+  Success rate: 98.98%
+  Average path length: 10.9562
+
+node2vec L_2
+  Success rate: 100%
+  Average path length: 7.0457
+
+EVN (with node2vec)
+  Success rate: 99.66%
+  Average path length: 10.0257
+
+Ridge regression (with node2vec)
+  Success rate: 99.99%
+  Average path length: 10.0361
+
+Overall ridge regression (with node2vec)
+  Success rate: 100%
+  Average path length: 6.8025
+
+Optimal
+  Success rate: 100%
+  Average path length: 2.6872
+
+
+Running experiment on data/real/facebook/686.edges
+# Nodes: 168
+# Edges: 1656
+# Nodes (Max WCC): 168
+# Edges (Max WCC): 1656
+
+Random unvisited
+  Success rate: 93.99%
+  Average path length: 15.2467
+
+Degree
+  Success rate: 91.59%
+  Average path length: 11.7755
+
+Similarity
+  Success rate: 96.35%
+  Average path length: 14.0892
+
+EVN (with similarity)
+  Success rate: 93.02%
+  Average path length: 11.9251
+
+Ridge regression (with similarity)
+  Success rate: 88.88%
+  Average path length: 12.9868
+
+Overall ridge regression (with similarity)
+  Success rate: 99.6%
+  Average path length: 9.54307
+
+node2vec L_2
+  Success rate: 100%
+  Average path length: 3.4642
+
+EVN (with node2vec)
+  Success rate: 98.8%
+  Average path length: 4.28026
+
+Ridge regression (with node2vec)
+  Success rate: 99.29%
+  Average path length: 5.86887
+
+Overall ridge regression (with node2vec)
+  Success rate: 99.74%
+  Average path length: 4.33678
+
+Optimal
+  Success rate: 100%
+  Average path length: 2.4234
+
+
+Running experiment on data/real/facebook/698.edges
+# Nodes: 61
+# Edges: 270
+# Nodes (Max WCC): 40
+# Edges (Max WCC): 220
+
+Random unvisited
+  Success rate: 99.93%
+  Average path length: 6.37416
+
+Degree
+  Success rate: 99.93%
+  Average path length: 4.05854
+
+Similarity
+  Success rate: 100%
+  Average path length: 5.9416
+
+EVN (with similarity)
+  Success rate: 99.96%
+  Average path length: 3.64026
+
+Ridge regression (with similarity)
+  Success rate: 99.98%
+  Average path length: 5.07842
+
+Overall ridge regression (with similarity)
+  Success rate: 100%
+  Average path length: 3.0814
+
+node2vec L_2
+  Success rate: 100%
+  Average path length: 3.417
+
+EVN (with node2vec)
+  Success rate: 100%
+  Average path length: 2.4166
+
+Ridge regression (with node2vec)
+  Success rate: 100%
+  Average path length: 3.7385
+
+Overall ridge regression (with node2vec)
+  Success rate: 100%
+  Average path length: 2.7393
+
+Optimal
+  Success rate: 100%
+  Average path length: 1.9483
+
+

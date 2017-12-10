@@ -2,26 +2,25 @@
 
 import random
 from collections import Counter
-from sklearn.linear_model import LinearRegression, Lasso, ElasticNet, Ridge
-from sklearn.preprocessing import PolynomialFeatures
+from sklearn.linear_model import Ridge
 from os import listdir
 from os.path import isfile, join
 
 #TEST_AMOUNT = 0.2
 
-USE_POLY = False
-
-if USE_POLY:
-    poly = PolynomialFeatures(degree=2)
-
-trainX = []
-trainY = []
-
 fileDir = "data/training_data/"
 files = [f for f in listdir(fileDir) if isfile(join(fileDir, f)) and f.startswith("training_data_") and f.endswith(".txt")]
 
+allX_sim = []
+allY_sim = []
+allX_n2v = []
+allY_n2v = []
+
 for filePath in files:
+    n2v = filePath.endswith("_n2v.txt")
     random.seed(42)
+    trainX = []
+    trainY = []
 
     for line in open(fileDir + filePath):
         split = line.split(", ")
@@ -37,9 +36,12 @@ for filePath in files:
 
         trainX.append(x)
         trainY.append(y)
-
-    if USE_POLY:
-        trainX = poly.fit_transform(trainX)
+        if n2v:
+            allX_n2v.append(x)
+            allY_n2v.append(y)
+        else:
+            allX_sim.append(x)
+            allY_sim.append(y)
 
     reg = Ridge(fit_intercept=False)
     reg.fit(trainX, trainY)
@@ -52,3 +54,19 @@ for filePath in files:
     outputFile.write(str(reg.coef_)[1:-1])
     outputFile.close()
     print "Wrote to path:", outputPath
+
+reg = Ridge(fit_intercept=False)
+reg.fit(allX_n2v, allY_n2v)
+outputPath = fileDir + "Ridge" + "_" + "all_n2v" + ".weights"
+outputFile = open(outputPath, "w")
+outputFile.write(str(reg.coef_)[1:-1])
+outputFile.close()
+print "Wrote to path:", outputPath
+
+reg = Ridge(fit_intercept=False)
+reg.fit(allX_sim, allY_sim)
+outputPath = fileDir + "Ridge" + "_" + "all_sim" + ".weights"
+outputFile = open(outputPath, "w")
+outputFile.write(str(reg.coef_)[1:-1])
+outputFile.close()
+print "Wrote to path:", outputPath

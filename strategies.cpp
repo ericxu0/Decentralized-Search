@@ -14,14 +14,19 @@
 
 using namespace std;
 
-double predictPathLength(PUNGraph& G, int cur, int dst, const set<int>& visited) {
+double predictPathLength(PUNGraph& G, int cur, int dst, const set<int>& visited, bool overall) {
     vector<double> feat;
     getFeatureVector(G, cur, dst, visited, feat);
 
-    assert(feat.size() == ridgeWeights.size());
+    vector<double> w;
+    if (overall)
+        w = overallWeights;
+    else
+        w = ridgeWeights;
+    assert(feat.size() == w.size());
     double dot = 0.0;
     for (size_t i = 0; i < feat.size(); i++)
-        dot += feat[i] * ridgeWeights[i];
+        dot += feat[i] * w[i];
     return dot;
 }
 
@@ -33,7 +38,29 @@ int ridgeStrategy(PUNGraph& G, int cur, int dst, const set<int>& visited) {
         int nxt = NI.GetOutNId(i);
         if (visited.find(nxt) != visited.end())
             continue;
-        double nxtVal = predictPathLength(G, nxt, dst, visited);
+        double nxtVal = predictPathLength(G, nxt, dst, visited, false);
+        if (nxtVal < bestVal) {
+            bestVal = nxtVal;
+            choices.clear();
+        }
+        if (bestVal == nxtVal)
+            choices.push_back(nxt);
+    }
+    if (choices.size() == 0)
+        return randomNeighbor(NI);
+    return randomElement(choices);
+}
+
+
+int overallRidgeStrategy(PUNGraph& G, int cur, int dst, const set<int>& visited) {
+    TUNGraph::TNodeI NI = G->GetNI(cur);
+    double bestVal = 1E20;
+    vector<int> choices;
+    for (int i = 0; i < NI.GetOutDeg(); i++) {
+        int nxt = NI.GetOutNId(i);
+        if (visited.find(nxt) != visited.end())
+            continue;
+        double nxtVal = predictPathLength(G, nxt, dst, visited, true);
         if (nxtVal < bestVal) {
             bestVal = nxtVal;
             choices.clear();

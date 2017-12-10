@@ -22,6 +22,7 @@ map<int, vector<int> > similarity_features;
 map<int, map<int, double> > tfidf;
 
 vector<double> ridgeWeights;
+vector<double> overallWeights;
 map<int, map<int, double> > similarityCache;
 
 const int CHUNKS = 100;
@@ -191,6 +192,16 @@ void getRegressionWeights(const string& filename, bool isCitation, bool useNode2
     while (fin >> x)
         ridgeWeights.push_back(x);
     fin.close();
+
+    overallWeights.clear();
+    if (useNode2Vec)
+        path = "data/training_data/Ridge_all_n2v.weights";
+    else
+        path = "data/training_data/Ridge_all_sim.weights";
+    ifstream fin2(path);
+    while (fin2 >> x)
+        overallWeights.push_back(x);
+    fin2.close();
 }
 
 double getNode2VecL2Dist(int a, int b) {

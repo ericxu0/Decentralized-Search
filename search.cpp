@@ -121,6 +121,9 @@ void experiment(const string& filename, bool isCitation) {
     cout << "Ridge regression (with similarity)\n";
     simulate(G, samples, ridgeStrategy);
 
+    cout << "Overall ridge regression (with similarity)\n";
+    simulate(G, samples, overallRidgeStrategy);
+
     // Replacing similarity with node2vec
     normalizeSimilarity(G, SIMILARITY_NODE2VEC);
     computeDiscretizedQ(G);
@@ -134,6 +137,9 @@ void experiment(const string& filename, bool isCitation) {
 
     cout << "Ridge regression (with node2vec)\n";
     simulate(G, samples, ridgeStrategy);
+
+    cout << "Overall ridge regression (with node2vec)\n";
+    simulate(G, samples, overallRidgeStrategy);
 
     cout << "Optimal\n";
     optimal(G, samples);
