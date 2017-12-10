@@ -109,7 +109,7 @@ void getSamples(PUNGraph& G, vector<pair<int, int> >& samples) {
     }
 }
 
-void experiment(const string& filename) {
+void experiment(const string& filename, bool isCitation) {
     cout << "Running experiment on " << filename << endl;
     PUNGraph G = TSnap::LoadEdgeList<PUNGraph>(filename.c_str(), 0, 1);
     cout << "# Nodes: " << G->GetNodes() << endl;
@@ -128,16 +128,13 @@ void experiment(const string& filename) {
     //generateSpectralEmbeddings(G, compIdx);
     node2vec_embeddings.clear();
     generateNode2vecEmbeddings(filename);
-    similarity_features.clear();
-    generateSimilarityFeatures(filename);
-    lassoWeights.clear();
-    olsWeights.clear();
-    elasticNetWeights.clear();
-    ridgeWeights.clear();
+    generateSimilarityFeatures(filename, isCitation);
     getRegressionWeights(filename);
 
     vector<pair<int, int> > samples;
     getSamples(G, samples);
+
+    IS_CITATION = isCitation;
     
     cout << "Simulating random unvisited strategy\n";
     simulate(G, samples, randomUnvisitedStrategy);
@@ -218,8 +215,10 @@ int main() {
     for(auto&& fileName : allEdgeFiles) {
         string fullFileName = facebookRoot + fileName;
         //if (fileName == "0.edges")
-            experiment(fullFileName);
+            experiment(fullFileName, false);
     }
+
+    experiment("data/real/cit-HepTh/cit-HepTh-subset.edges", true);
 
     return 0;
 }

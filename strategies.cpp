@@ -22,6 +22,8 @@ using namespace Spectra;
 
 map<int, double> clustCf;
 
+bool IS_CITATION = false;
+
 double predictPathLength(PUNGraph& G, int cur, int dst, const set<int>& visited, const string& weightsStr) {
     TUNGraph::TNodeI curNI = G->GetNI(cur);
     int visitedNeighbors = 0;
@@ -37,7 +39,7 @@ double predictPathLength(PUNGraph& G, int cur, int dst, const set<int>& visited,
     vector<double> feat;
     //feat.push_back(G->GetNodes());                      // graph nodes
     //feat.push_back(G->GetEdges());                      // graph edges
-    feat.push_back(getSimilarity(cur, dst));            // similarity
+    feat.push_back(getSimilarity(cur, dst, IS_CITATION)); // similarity
     feat.push_back(curNI.GetOutDeg());                  // degree
     feat.push_back(clustCf[cur]);                       // clustering coefficient
     feat.push_back(visited.find(cur) == visited.end()); // 1 if unvisited, 0 if visited
@@ -172,7 +174,7 @@ double tfPredictPathLength(PUNGraph& G, int cur, int dst, const set<int>& visite
     vector<double> feat;
     //feat.push_back(G->GetNodes());                      // graph nodes
     //feat.push_back(G->GetEdges());                      // graph edges
-    feat.push_back(getSimilarity(cur, dst));            // similarity
+    feat.push_back(getSimilarity(cur, dst, IS_CITATION)); // similarity
     feat.push_back(curNI.GetOutDeg());                  // degree
     feat.push_back(clustCf[cur]);                       // clustering coefficient
     feat.push_back(visited.find(cur) == visited.end()); // 1 if unvisited, 0 if visited
@@ -295,7 +297,7 @@ int evnStrategy(PUNGraph& G, int cur, int dst, const set<int>& visited) {
         int nxt = NI.GetOutNId(i);
         if (visited.find(nxt) != visited.end())
             continue;
-        double nxtVal = log(1.0 - q(getSimilarity(nxt, dst))) * G->GetNI(nxt).GetOutDeg(); // log(1 - q_st)^k
+        double nxtVal = log(1.0 - q(getSimilarity(nxt, dst, IS_CITATION))) * G->GetNI(nxt).GetOutDeg(); // log(1 - q_st)^k
         if (nxtVal < bestVal) {
             bestVal = nxtVal;
             choices.clear();
@@ -384,7 +386,7 @@ int similarityStrategy(PUNGraph& G, int cur, int dst, const set<int>& visited) {
         int nxt = NI.GetOutNId(i);
         if (visited.find(nxt) != visited.end())
             continue;
-        int sim = getSimilarity(nxt, dst);
+        int sim = getSimilarity(nxt, dst, IS_CITATION);
         if (bestSim < sim) {
             bestSim = sim;
             choices.clear();

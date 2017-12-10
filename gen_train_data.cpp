@@ -30,7 +30,7 @@ const int SEED = 224;
 const int INFTY = 1<<28;
 const double PROB_RANDOM = 1.0/3;
 
-void getFeatureVector(PUNGraph& G, int cur, int dst, set<int>& visited, map<int, double>& clusterCf, vector<double>& feat) {
+void getFeatureVector(PUNGraph& G, int cur, int dst, set<int>& visited, map<int, double>& clusterCf, vector<double>& feat, double isCitation) {
     TUNGraph::TNodeI curNI = G->GetNI(cur);
     int visitedNeighbors = 0;
     for (int i = 0; i < curNI.GetOutDeg(); i++) {
@@ -41,7 +41,7 @@ void getFeatureVector(PUNGraph& G, int cur, int dst, set<int>& visited, map<int,
 
     //feat.push_back(G->GetNodes());                      // graph nodes
     //feat.push_back(G->GetEdges());                      // graph edges
-    feat.push_back(getSimilarity(cur, dst));            // similarity
+    feat.push_back(getSimilarity(cur, dst, isCitation));  // similarity
     feat.push_back(curNI.GetOutDeg());                  // degree
     feat.push_back(clusterCf[cur]);                     // clustering coefficient
     feat.push_back(visited.find(cur) == visited.end()); // 1 if unvisited, 0 if visited
@@ -127,7 +127,7 @@ void computeShortestPath(PUNGraph& G, map<int, int>& compIdx, vector<vector<int>
                 minDist[i][j] = min(minDist[i][j], minDist[i][k] + minDist[k][j]);
 }
 
-void getTrainingData(const string& filename, ofstream& dataFile) {
+void getTrainingData(const string& filename, ofstream& dataFile, bool isCitation) {
     cout << "\nGenerating training data on " << filename << endl;
     PUNGraph G = TSnap::LoadEdgeList<PUNGraph>(filename.c_str(), 0, 1);
     cout << "# Nodes: " << G->GetNodes() << endl;
@@ -149,8 +149,7 @@ void getTrainingData(const string& filename, ofstream& dataFile) {
     //generateSpectralEmbeddings(G, compIdx);
     node2vec_embeddings.clear();
     generateNode2vecEmbeddings(filename);
-    similarity_features.clear();
-    generateSimilarityFeatures(filename);
+    generateSimilarityFeatures(filename, isCitation);
 
     map<int, double> clusterCf;
     for (TUNGraph::TNodeI NI = G->BegNI(); NI < G->EndNI(); NI++)
@@ -169,10 +168,10 @@ void getTrainingData(const string& filename, ofstream& dataFile) {
             visited.insert(path[i]);
         
         vector<double> feat;
-        getFeatureVector(G, randomNeighbor(G->GetNI(path[pidx])), s.second, visited, clusterCf, feat);
+        getFeatureVector(G, randomNeighbor(G->GetNI(path[pidx])), s.second, visited, clusterCf, feat, isCitation);
 
         int total = 0;
-        for (int i = 0; i < NUM_WALKS; i++) {
+        for (int j = 0; j < NUM_WALKS; j++) {
             vector<int> walk;
             performWalk(G, compIdx, minDist, path[pidx], s.second, walk);
             total += walk.size() - 1;
@@ -209,6 +208,7 @@ int main() {
     //getTrainingData("data/real/gplus/", dataFile);
     //getTrainingData("data/real/twitter/", dataFile);
 
+    /*
     string facebookRoot = "data/real/facebook/";
     vector<string> allEdgeFiles = getAllFiles(facebookRoot, GRAPH_EXTENSION);
     for(auto&& fileName : allEdgeFiles) {
@@ -217,10 +217,19 @@ int main() {
             ofstream dataFile;
             string path = DATA_PREFIX + "facebook_" + getBase(fileName) + ".txt";
             dataFile.open(path);
-            getTrainingData(fullFileName, dataFile);
+            getTrainingData(fullFileName, dataFile, false);
             dataFile.close();
             cout << "Wrote training data to file: " << path << endl;
         }
+    }
+    */
+    if (WRITE_TO_FILE) {
+        ofstream dataFile;
+        string path = DATA_PREFIX + "cit-HepTh-subset.txt";
+        dataFile.open(path);
+        getTrainingData("data/real/cit-HepTh/cit-HepTh-subset.edges", dataFile, true);
+        dataFile.close();
+        cout << "Wrote training data to file: " << path << endl;
     }
 
     return 0;

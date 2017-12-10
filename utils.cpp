@@ -21,6 +21,7 @@ namespace fs = ::boost::filesystem;
 map<int, pair<double, double> > spectral_embeddings;
 map<int, vector<double> > node2vec_embeddings;
 map<int, vector<int> > similarity_features;
+map<int, map<int, double> > tfidf;
 vector<double> lassoWeights;
 vector<double> olsWeights;
 vector<double> elasticNetWeights;
@@ -105,23 +106,43 @@ void generateNode2vecEmbeddings(const string& filename) {
     fin.close();
 }
 
-void generateSimilarityFeatures(const string& filename) {
-    string feat_file = getBase(filename) + ".feat";
-    ifstream fin(feat_file);
-    string input;
-    while (getline(fin, input) && input != "") {
-        stringstream ss(input);
-        int x;
-        ss >> x;
-        vector<int>& v = similarity_features[x];
-        while (ss >> x) {
-            v.push_back(x);
+void generateSimilarityFeatures(const string& filename, bool isCitation) {
+    if (isCitation) {
+        tfidf.clear();
+        ifstream fin(getBase(filename) + ".tfidf");
+        string input;
+        while (getline(fin, input) && input != "") {
+            stringstream ss(input);
+            int x, word;
+            double value;
+            char c;
+            ss >> c >> x >> c >> word >> c >> c >> value;
+            tfidf[x][word] = value;
         }
+    } else {
+        similarity_features.clear();
+        string feat_file = getBase(filename) + ".feat";
+        ifstream fin(feat_file);
+        string input;
+        while (getline(fin, input) && input != "") {
+            stringstream ss(input);
+            int x;
+            ss >> x;
+            vector<int>& v = similarity_features[x];
+            while (ss >> x) {
+                v.push_back(x);
+            }
+        }
+        fin.close();
     }
-    fin.close();
 }
 
 void getRegressionWeights(const string& filename) {
+    lassoWeights.clear();
+    olsWeights.clear();
+    elasticNetWeights.clear();
+    ridgeWeights.clear();
+
     string base = getBase(filename);
     int idx = base.size() - 1;
     while (idx >= 0 && base[idx] != '/')
@@ -183,13 +204,33 @@ double getNode2VecLInfDist(int a, int b) {
     return ret;
 }
 
-int getSimilarity(int a, int b) {
-    int len = similarity_features[a].size();
-    assert(similarity_features[a].size() == similarity_features[b].size());
-    int cnt = 0;
-    for (int i = 0; i < len; i++)
-        cnt += similarity_features[a][i] == 1 && similarity_features[b][i] == 1;
-    return cnt;
+double len(const map<int, double>& vec) {
+    double ret = 0.0;
+    for (auto it = vec.begin(); it != vec.end(); it++)
+        ret += it->second * it->second;
+    return sqrt(ret);
+}
+
+double getSimilarity(int a, int b, bool isCitation) {
+    if (isCitation) {
+        map<int, double>& vecA = tfidf[a];
+        map<int, double>& vecB = tfidf[b];
+        double dot = 0.0;
+        for (auto it = vecA.begin(); it != vecA.end(); it++) {
+            int word = it->first;
+            double valA = it->second;
+            double valB = vecB[word];
+            dot += valA * valB;
+        }
+        return dot / (len(vecA) * len(vecB));
+    } else {
+        int len = similarity_features[a].size();
+        assert(similarity_features[a].size() == similarity_features[b].size());
+        int cnt = 0;
+        for (int i = 0; i < len; i++)
+            cnt += similarity_features[a][i] == 1 && similarity_features[b][i] == 1;
+        return cnt;
+    }
 }
 
 // Returns a random neighbor, or -1 if there are none.

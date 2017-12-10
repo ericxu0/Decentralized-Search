@@ -24,6 +24,8 @@ fileDir = "data/training_data/"
 files = [f for f in listdir(fileDir) if isfile(join(fileDir, f)) and f[-3:] == 'txt']
 
 for filePath in files:
+    random.seed(42)
+
     for line in open(fileDir + filePath):
         split = line.split(", ")
 
@@ -48,29 +50,29 @@ for filePath in files:
         trainX = poly.fit_transform(trainX)
         testX = poly.fit_transform(testX)
 
-    #linreg = LinearRegression(fit_intercept=False, normalize=False, copy_X=True, n_jobs=1)
-    #linreg = Lasso()
-    linreg = Ridge()
-    linreg.fit(trainX, trainY)
-    predictedY = linreg.predict(testX)
+    for reg in [LinearRegression(fit_intercept=False), Lasso(), ElasticNet(), Ridge(fit_intercept=False)]:
+        reg.fit(trainX, trainY)
+        predictedY = reg.predict(testX)
 
-    # def sizes(x, y):
-    #     c = Counter((x[i], y[i]) for i in range(len(x)))
-    #     return [c[(x[i], y[i])] ** 2 * 5 for i in range(len(x))]
+        # def sizes(x, y):
+        #     c = Counter((x[i], y[i]) for i in range(len(x)))
+        #     return [c[(x[i], y[i])] ** 2 * 5 for i in range(len(x))]
 
-    # print "Linear regression"
-    # print "Score: " + str(linreg.score(testX, testY))
-    idx = filePath[:filePath.rfind('_')].rfind('_')
-    id_num = filePath[idx + 1:filePath.rfind('.')]
-    outputPath = fileDir + "Ridge_" + id_num + ".weights"
-    outputFile = open(outputPath, "w")
-    outputFile.write(str(linreg.coef_)[1:-1])
-    outputFile.close()
-    print "Coef:", linreg.coef_
+        # print "Linear regression"
+        # print "Score: " + str(reg.score(testX, testY))
+        idx = filePath[:filePath.rfind('_')].rfind('_')
+        id_num = filePath[idx + 1:filePath.rfind('.')]
+        typeStr = str(type(reg))
+        typeStr = typeStr[typeStr.rfind('.') + 1 : typeStr.rfind('\'')]
+        outputPath = fileDir + typeStr + "_" + id_num + ".weights"
+        outputFile = open(outputPath, "w")
+        outputFile.write(str(reg.coef_)[1:-1])
+        outputFile.close()
+        print "Wrote to path:", outputPath, "coef:", reg.coef_
 
-    # plot.scatter(testY, predictedY, s=sizes(testY, predictedY), marker='.', facecolor='none', edgecolor='b')
-    # plot.title("Actual vs. Predicted Path Lengths")
-    # plot.xlabel("Actual path length")
-    # plot.ylabel("Predicted path length")
-    # plot.show()
+        # plot.scatter(testY, predictedY, s=sizes(testY, predictedY), marker='.', facecolor='none', edgecolor='b')
+        # plot.title("Actual vs. Predicted Path Lengths")
+        # plot.xlabel("Actual path length")
+        # plot.ylabel("Predicted path length")
+        # plot.show()
 
