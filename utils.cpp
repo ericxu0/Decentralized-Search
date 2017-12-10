@@ -155,14 +155,16 @@ double getNode2VecL1Dist(int a, int b) {
     return ret;
 }
 
+
 double getNode2VecL2Dist(int a, int b) {
     double ret = 0.0;
     vector<double>& pa = node2vec_embeddings[a];
     vector<double>& pb = node2vec_embeddings[b];
     for (size_t i = 0; i < pa.size(); i++)
-        ret += (pa[i] - pb[i])*(pa[i] - pb[i]);
-    return sqrt(ret);
+        ret += abs(pa[i] - pb[i]);
+    return ret;
 }
+
 
 double getNode2VecLInfDist(int a, int b) {
     double ret = 0.0;
