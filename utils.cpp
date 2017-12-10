@@ -27,6 +27,8 @@ vector<double> olsWeights;
 vector<double> elasticNetWeights;
 vector<double> ridgeWeights;
 
+map<int, map<int, double> > similarityCache;
+
 string getBase(string s) {
     int idx = s.size() - 1;
     while (idx >= 0 && s[idx] != '.')
@@ -137,7 +139,7 @@ void generateSimilarityFeatures(const string& filename, bool isCitation) {
     }
 }
 
-void getRegressionWeights(const string& filename) {
+void getRegressionWeights(const string& filename, bool isCitation) {
     lassoWeights.clear();
     olsWeights.clear();
     elasticNetWeights.clear();
@@ -148,15 +150,20 @@ void getRegressionWeights(const string& filename) {
     while (idx >= 0 && base[idx] != '/')
         idx--;
     string num = base.substr(idx + 1, base.size() - idx - 1);
-    string types[] = {"L1", "L2", "ElasticNet", "Ridge"};
+    string types[] = {"LinearRegression", "Lasso", "ElasticNet", "Ridge"};
     for (string& cur : types) {
-        string path = "data/training_data/" + cur + "_facebook_" + num + ".weights";
+        string path;
+        if (isCitation) {
+            path = "data/training_data/" + cur + "_cit-HepTh-subset.weights";
+        } else {
+            path = "data/training_data/" + cur + "_facebook_" + num + ".weights";
+        }
         ifstream fin(path);
         double x;
         while (fin >> x) {
-            if (cur == "L1")
+            if (cur == "Lasso")
                 lassoWeights.push_back(x);
-            else if (cur == "L2")
+            else if (cur == "LinearRegression")
                 olsWeights.push_back(x);
             else if (cur == "ElasticNet")
                 elasticNetWeights.push_back(x);
@@ -211,7 +218,26 @@ double len(const map<int, double>& vec) {
     return sqrt(ret);
 }
 
+void clearSimilarityCache() {
+    similarityCache.clear();
+}
+
 double getSimilarity(int a, int b, bool isCitation) {
+    if (b > a) {
+        int t = a;
+        a = b;
+        b = t;
+    }
+
+    auto it = similarityCache.find(a);
+    if (it != similarityCache.end()) {
+        map<int, double>& m = it->second;
+        auto it2 = m.find(b);
+        if (it2 != m.end())
+            return it2->second;
+    }
+
+    double result;
     if (isCitation) {
         map<int, double>& vecA = tfidf[a];
         map<int, double>& vecB = tfidf[b];
@@ -222,15 +248,17 @@ double getSimilarity(int a, int b, bool isCitation) {
             double valB = vecB[word];
             dot += valA * valB;
         }
-        return dot / (len(vecA) * len(vecB));
+        result = dot / (len(vecA) * len(vecB));
     } else {
         int len = similarity_features[a].size();
         assert(similarity_features[a].size() == similarity_features[b].size());
         int cnt = 0;
         for (int i = 0; i < len; i++)
             cnt += similarity_features[a][i] == 1 && similarity_features[b][i] == 1;
-        return cnt;
+        result = cnt; // TODO: normalize?
     }
+    similarityCache[a][b] = result;
+    return result;
 }
 
 // Returns a random neighbor, or -1 if there are none.

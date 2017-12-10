@@ -129,12 +129,13 @@ void experiment(const string& filename, bool isCitation) {
     node2vec_embeddings.clear();
     generateNode2vecEmbeddings(filename);
     generateSimilarityFeatures(filename, isCitation);
-    getRegressionWeights(filename);
+    getRegressionWeights(filename, isCitation);
 
     vector<pair<int, int> > samples;
     getSamples(G, samples);
 
     IS_CITATION = isCitation;
+    clearSimilarityCache();
     
     cout << "Simulating random unvisited strategy\n";
     simulate(G, samples, randomUnvisitedStrategy);
@@ -163,8 +164,8 @@ void experiment(const string& filename, bool isCitation) {
     cout << "Simulating similarity strategy\n";
     simulate(G, samples, similarityStrategy);
 
-    cout << "Simulating EVN\n";
-    simulate(G, samples, evnStrategy);
+    //cout << "Simulating EVN\n";
+    //simulate(G, samples, evnStrategy);
 
     cout << "Simulating OLS strategy\n";
     simulate(G, samples, olsStrategy);
@@ -214,8 +215,8 @@ int main() {
     vector<string> allEdgeFiles = getAllFiles(facebookRoot, GRAPH_EXTENSION);
     for(auto&& fileName : allEdgeFiles) {
         string fullFileName = facebookRoot + fileName;
-        //if (fileName == "0.edges")
-            experiment(fullFileName, false);
+//        if (fileName == "0.edges")
+//            experiment(fullFileName, false);
     }
 
     experiment("data/real/cit-HepTh/cit-HepTh-subset.edges", true);

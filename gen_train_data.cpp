@@ -208,7 +208,6 @@ int main() {
     //getTrainingData("data/real/gplus/", dataFile);
     //getTrainingData("data/real/twitter/", dataFile);
 
-    /*
     string facebookRoot = "data/real/facebook/";
     vector<string> allEdgeFiles = getAllFiles(facebookRoot, GRAPH_EXTENSION);
     for(auto&& fileName : allEdgeFiles) {
@@ -222,7 +221,6 @@ int main() {
             cout << "Wrote training data to file: " << path << endl;
         }
     }
-    */
     if (WRITE_TO_FILE) {
         ofstream dataFile;
         string path = DATA_PREFIX + "cit-HepTh-subset.txt";

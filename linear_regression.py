@@ -60,11 +60,11 @@ for filePath in files:
 
         # print "Linear regression"
         # print "Score: " + str(reg.score(testX, testY))
-        idx = filePath[:filePath.rfind('_')].rfind('_')
-        id_num = filePath[idx + 1:filePath.rfind('.')]
+        assert filePath.startswith("training_data_10k_")
+        name = filePath[len("training_data_10k_") : filePath.rfind('.')]
         typeStr = str(type(reg))
         typeStr = typeStr[typeStr.rfind('.') + 1 : typeStr.rfind('\'')]
-        outputPath = fileDir + typeStr + "_" + id_num + ".weights"
+        outputPath = fileDir + typeStr + "_" + name + ".weights"
         outputFile = open(outputPath, "w")
         outputFile.write(str(reg.coef_)[1:-1])
         outputFile.close()

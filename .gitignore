@@ -6,7 +6,3 @@ nodeEmbeddings
 gen_train_data
 
 model.pyc
-
-*.emb
-
-*.emb
