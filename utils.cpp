@@ -62,6 +62,7 @@ vector<string> getAllFiles(const fs::path& root, const string& ext)
 
 }
 
+/*
 void generateSpectralEmbeddings(PUNGraph& G, map<int, int>& compIdx) {
     int N = G->GetNodes();
     SparseMatrix<double> laplacian(N, N);
@@ -92,8 +93,10 @@ void generateSpectralEmbeddings(PUNGraph& G, map<int, int>& compIdx) {
     //cout << eigs.eigenvalues() << endl;
     //cout << eigs.eigenvectors() << endl;
 }
+*/
 
 void generateNode2vecEmbeddings(const string& filename) {
+    node2vec_embeddings.clear();
     string embedding_file = getBase(filename) + ".emb";
     ifstream fin(embedding_file);
     int N, D;
@@ -178,6 +181,7 @@ void getRegressionWeights(const string& filename, bool isCitation) {
     }
 }
 
+/*
 double getSpectralDist(int a, int b) {
     pair<double, double> pa = spectral_embeddings[a];
     pair<double, double> pb = spectral_embeddings[b];
@@ -192,7 +196,7 @@ double getNode2VecL1Dist(int a, int b) {
         ret += abs(pa[i] - pb[i]);
     return ret;
 }
-
+*/
 
 double getNode2VecL2Dist(int a, int b) {
     double ret = 0.0;
@@ -203,7 +207,7 @@ double getNode2VecL2Dist(int a, int b) {
     return sqrt(ret);
 }
 
-
+/*
 double getNode2VecLInfDist(int a, int b) {
     double ret = 0.0;
     vector<double>& pa = node2vec_embeddings[a];
@@ -212,6 +216,7 @@ double getNode2VecLInfDist(int a, int b) {
         ret = max(ret, abs(pa[i] - pb[i]));
     return ret;
 }
+*/
 
 double len(const map<int, double>& vec) {
     double ret = 0.0;
@@ -220,11 +225,46 @@ double len(const map<int, double>& vec) {
     return sqrt(ret);
 }
 
-void clearSimilarityCache() {
-    similarityCache.clear();
+double cosineSimilarity(const vector<int>& a, const vector<int>& b) {
+    double dot = 0.0;
+    double lenA = 0.0;
+    double lenB = 0.0;
+    for (size_t i = 0; i < a.size(); i++) {
+        dot += a[i] * b[i];
+        lenA += a[i] * a[i];
+        lenB += b[i] * b[i];
+    }
+    return dot / sqrt(lenA * lenB);
 }
 
-double getSimilarity(int a, int b, bool isCitation) {
+double cosineSimilarity(const vector<double>& a, const vector<double>& b) {
+    double dot = 0.0;
+    double lenA = 0.0;
+    double lenB = 0.0;
+    for (size_t i = 0; i < a.size(); i++) {
+        dot += a[i] * b[i];
+        lenA += a[i] * a[i];
+        lenB += b[i] * b[i];
+    }
+    return dot / sqrt(lenA * lenB);
+}
+
+double cosineSimilarity(map<int, double>& a, map<int, double>& b) {
+    double dot = 0.0;
+    for (auto it = a.begin(); it != a.end(); it++) {
+        int index = it->first;
+        double valA = it->second;
+        double valB = b[index];
+        dot += valA * valB;
+    }
+    return dot / (len(a) * len(b));
+}
+
+const int SIMILARITY_TFIDF = 0;
+const int SIMILARITY_FEATURES = 1;
+const int SIMILARITY_NODE2VEC = 2;
+
+double getSimilarity(int a, int b, int similarityMethod) {
     if (b < a) {
         swap(a, b);
     }
@@ -237,40 +277,46 @@ double getSimilarity(int a, int b, bool isCitation) {
             return it2->second;
     }
 
-    double result;
-    if (isCitation) {
-        map<int, double>& vecA = tfidf[a];
-        map<int, double>& vecB = tfidf[b];
-        double dot = 0.0;
-        for (auto it = vecA.begin(); it != vecA.end(); it++) {
-            int word = it->first;
-            double valA = it->second;
-            double valB = vecB[word];
-            dot += valA * valB;
-        }
-        result = dot / (len(vecA) * len(vecB));
+    double result = 0.0;
+    if (similarityMethod == SIMILARITY_TFIDF) {
+        result = cosineSimilarity(tfidf[a], tfidf[b]);
+    } else if (similarityMethod == SIMILARITY_FEATURES) {
+        result = cosineSimilarity(similarity_features[a], similarity_features[b]);
+    } else if (similarityMethod == SIMILARITY_NODE2VEC) {
+        result = 0.0 - getNode2VecL2Dist(a, b);
     } else {
-        int len = similarity_features[a].size();
-        assert(similarity_features[a].size() == similarity_features[b].size());
-        int cnt = 0;
-        for (int i = 0; i < len; i++)
-            cnt += similarity_features[a][i] == 1 && similarity_features[b][i] == 1;
-        result = cnt; // TODO: normalize?
+        cout << "Unknown similarity method: " << similarityMethod << endl;
+        assert(false);
     }
+
     similarityCache[a][b] = similarityCache[b][a] = result;
     return result;
 }
 
-void normalizeSimilarity(PUNGraph& G, bool isCitation) {
+void normalizeSimilarity(PUNGraph& G, int similarityMethod) {
+    similarityCache.clear();
     double maxSim = 0;
-    for (TUNGraph::TNodeI NI1 = G->BegNI(); NI1 < G->EndNI(); NI1++)
-        for (TUNGraph::TNodeI NI2 = G->BegNI(); NI2 < G->EndNI(); NI2++)
-            if (NI1.GetId() != NI2.GetId())
-                maxSim = max(maxSim, getSimilarity(NI1.GetId(), NI2.GetId(), isCitation));
+    double minSim = 1E23;
+    for (TUNGraph::TNodeI NI1 = G->BegNI(); NI1 < G->EndNI(); NI1++) {
+        for (TUNGraph::TNodeI NI2 = G->BegNI(); NI2 < G->EndNI(); NI2++) {
+            int a = NI1.GetId();
+            int b = NI2.GetId();
+            if (a != b) {
+                double sim = getSimilarity(a, b, similarityMethod);
+                maxSim = max(maxSim, sim);
+                minSim = min(minSim, sim);
+            }
+        }
+    }
 
-    for (TUNGraph::TNodeI NI1 = G->BegNI(); NI1 < G->EndNI(); NI1++)
-        for (TUNGraph::TNodeI NI2 = G->BegNI(); NI2 < G->EndNI(); NI2++)
-            similarityCache[NI1.GetId()][NI2.GetId()] /= maxSim;
+    for (TUNGraph::TNodeI NI1 = G->BegNI(); NI1 < G->EndNI(); NI1++) {
+        for (TUNGraph::TNodeI NI2 = G->BegNI(); NI2 < G->EndNI(); NI2++) {
+            int a = NI1.GetId();
+            int b = NI2.GetId();
+            similarityCache[a][b] = (similarityCache[a][b] - minSim) / (maxSim - minSim);
+            assert(similarityCache[a][b] >= 0.0 && similarityCache[a][b] <= 1.0);
+        }
+    }
 }
 
 const int CHUNKS = 100;

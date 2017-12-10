@@ -40,15 +40,15 @@ double predictPathLength(PUNGraph& G, int cur, int dst, const set<int>& visited,
     vector<double> feat;
     //feat.push_back(G->GetNodes());                      // graph nodes
     //feat.push_back(G->GetEdges());                      // graph edges
-    feat.push_back(getSimilarity(cur, dst, IS_CITATION)); // similarity
+    feat.push_back(similarityCache[cur][dst]);          // similarity
     feat.push_back(curNI.GetOutDeg());                  // degree
     feat.push_back(clustCf[cur]);                       // clustering coefficient
     feat.push_back(visited.find(cur) == visited.end()); // 1 if unvisited, 0 if visited
     feat.push_back(visitedNeighbors);                   // number of visited neighbors
     feat.push_back(fracVisited);                        // fraction of visited neighbors
-    feat.push_back(getNode2VecL1Dist(cur, dst)); // L1 distance of node2vec
+    feat.push_back(0);//feat.push_back(getNode2VecL1Dist(cur, dst)); // L1 distance of node2vec
     feat.push_back(getNode2VecL2Dist(cur, dst)); // L2 distance of node2vec
-    feat.push_back(getNode2VecLInfDist(cur, dst)); // LInfinity distance of node2vec
+    feat.push_back(0);//feat.push_back(getNode2VecLInfDist(cur, dst)); // LInfinity distance of node2vec
     feat.push_back(1);                                  // constant term for linear regression
 
     //double weights[] = {0, -0.00230776, 0, 0, 0, 0, 0.05773281, 0, 0, 0};     
@@ -258,6 +258,7 @@ int evnStrategy(PUNGraph& G, int cur, int dst, const set<int>& visited) {
     return randomElement(choices);
 }
 
+/*
 int spectralStrategy(PUNGraph& G, int cur, int dst, const set<int>& visited) {
     TUNGraph::TNodeI NI = G->GetNI(cur);
     int best = -1;
@@ -325,16 +326,17 @@ int node2vecLInfStrategy(PUNGraph& G, int cur, int dst, const set<int>& visited)
         return randomNeighbor(NI);
     return best;
 }
+*/
 
 int similarityStrategy(PUNGraph& G, int cur, int dst, const set<int>& visited) {
     TUNGraph::TNodeI NI = G->GetNI(cur);
-    int bestSim = -1;
+    double bestSim = -1;
     vector<int> choices;
     for (int i = 0; i < NI.GetOutDeg(); i++) {
         int nxt = NI.GetOutNId(i);
         if (visited.find(nxt) != visited.end())
             continue;
-        int sim = getSimilarity(nxt, dst, IS_CITATION);
+        double sim = similarityCache[nxt][dst];
         if (bestSim < sim) {
             bestSim = sim;
             choices.clear();

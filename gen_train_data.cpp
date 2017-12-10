@@ -38,20 +38,14 @@ void getFeatureVector(PUNGraph& G, int cur, int dst, set<int>& visited, map<int,
     }
     double fracVisited = 1.0 * visitedNeighbors / curNI.GetOutDeg();
 
-    //feat.push_back(G->GetNodes());                      // graph nodes
-    //feat.push_back(G->GetEdges());                      // graph edges
-    feat.push_back(avg_path_len);
-    feat.push_back(getSimilarity(cur, dst, isCitation));  // similarity
-    feat.push_back(curNI.GetOutDeg());                  // degree
-    feat.push_back(clusterCf[cur]);                     // clustering coefficient
-    feat.push_back(visited.find(cur) == visited.end()); // 1 if unvisited, 0 if visited
-    //feat.push_back(visitedNeighbors);                   // number of visited neighbors
-    feat.push_back(fracVisited);                        // fraction of visited neighbors
-    feat.push_back(0); //TODO: EVN Probability
-    //feat.push_back(getNode2VecL1Dist(cur, dst)); // L1 distance of node2vec
-    //feat.push_back(getNode2VecL2Dist(cur, dst)); // L2 distance of node2vec
-    //feat.push_back(getNode2VecLInfDist(cur, dst)); // LInfinity distance of node2vec
-    feat.push_back(1);                                  // constant term for linear regression
+    feat.push_back(avg_path_len);                        // 0. average shortest path length in G
+    feat.push_back(similarityCache[cur][dst]);           // 1. similarity OR L2 distance of node2vec
+    feat.push_back(curNI.GetOutDeg());                   // 3. degree
+    feat.push_back(clusterCf[cur]);                      // 4. clustering coefficient
+    feat.push_back(visited.find(cur) == visited.end());  // 5. 1 if unvisited, 0 if visited
+    feat.push_back(fracVisited);                         // 6. fraction of visited neighbors
+    feat.push_back(pst(G, cur, dst));                    // 7. EVN Probability TODO
+    feat.push_back(1);                                   // 8. constant term for linear regression
 }
 
 void performWalk(PUNGraph& G, map<int, int>& compIdx, vector<vector<int> >& minDist, int src, int dst, vector<int>& path) {
@@ -131,10 +125,8 @@ void getTrainingData(const string& filename, ofstream& dataFile, bool isCitation
     
     //spectral_embeddings.clear();
     //generateSpectralEmbeddings(G, compIdx);
-    node2vec_embeddings.clear();
     generateNode2vecEmbeddings(filename);
     generateSimilarityFeatures(filename, isCitation);
-    clearSimilarityCache();
     normalizeSimilarity(G, isCitation);
 
     map<int, double> clusterCf;

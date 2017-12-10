@@ -14,6 +14,7 @@
 #include <vector>
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 
 using namespace std;
 using namespace Eigen;
@@ -125,16 +126,12 @@ void experiment(const string& filename, bool isCitation) {
     vector<vector<int> > minDist;
     AVG_PATH_LEN = computeShortestPath(G, compIdx, minDist);
 
-    //spectral_embeddings.clear();
-    //generateSpectralEmbeddings(G, compIdx);
-    node2vec_embeddings.clear();
     generateNode2vecEmbeddings(filename);
     generateSimilarityFeatures(filename, isCitation);
     getRegressionWeights(filename, isCitation);
 
     IS_CITATION = isCitation;
-    clearSimilarityCache();
-    normalizeSimilarity(G, isCitation);
+    normalizeSimilarity(G, isCitation ? SIMILARITY_TFIDF : SIMILARITY_FEATURES);
     computeDiscretizedQ(G);
 
     vector<pair<int, int> > samples;
@@ -155,11 +152,15 @@ void experiment(const string& filename, bool isCitation) {
     cout << "Ridge regression (with similarity)\n";
     simulate(G, samples, ridgeStrategy); // TODO: currently uses node2vec features?
 
+    // Replacing similarity with node2vec
+    normalizeSimilarity(G, SIMILARITY_NODE2VEC);
+    computeDiscretizedQ(G);
+
     cout << "node2vec L_2\n";
-    simulate(G, samples, node2vecL2Strategy);
+    simulate(G, samples, similarityStrategy);
 
     cout << "EVN (with node2vec)\n";
-    // TODO
+    simulate(G, samples, evnStrategy);
 
     cout << "Ridge regression (with node2vec)\n";
     // TODO
