@@ -29,8 +29,8 @@ for filePath in files:
         x = map(float, split[0].split(" "))
 
         trueLen = int(split[1])
-        randomWalkLen = float(split[2])
-        y = randomWalkLen # TODO: trueLen?
+        randomWalkLen = float(split[2]) # Not used, trueLen gives very slightly better results
+        y = trueLen
 
         if trueLen <= 1:
             continue # Meaningless to train if we're at the destination or 1 edge away

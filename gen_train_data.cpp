@@ -1,11 +1,7 @@
 #include "Snap.h"
-#include "spectra/SymEigsSolver.h"
-#include "spectra/MatOp/SparseSymMatProd.h"
 #include "utils.cpp"
 #include <algorithm>
 #include <cassert>
-#include <eigen3/Eigen/Core>
-#include <eigen3/Eigen/SparseCore>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -14,9 +10,8 @@
 #include <set>
 #include <sstream>
 #include <vector>
+
 using namespace std;
-using namespace Eigen;
-using namespace Spectra;
 
 const bool DEBUG = false;
 const bool WRITE_TO_FILE = true;

@@ -1,21 +1,16 @@
 #include "Snap.h"
-#include "spectra/SymEigsSolver.h"
-#include "spectra/MatOp/SparseSymMatProd.h"
 #include <algorithm>
-#include <eigen3/Eigen/Core>
-#include <eigen3/Eigen/SparseCore>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <map>
 #include <numeric>
 #include <set>
+#include <sstream>
 #include <vector>
 #include <boost/filesystem.hpp>
 
 using namespace std;
-using namespace Eigen;
-using namespace Spectra;
 namespace fs = ::boost::filesystem;
 
 const int INFTY = 1<<28;
@@ -127,39 +122,6 @@ vector<string> getAllFiles(const fs::path& root, const string& ext)
 
 }
 
-/*
-void generateSpectralEmbeddings(PUNGraph& G, map<int, int>& compIdx) {
-    int N = G->GetNodes();
-    SparseMatrix<double> laplacian(N, N);
-    laplacian.reserve(VectorXi::Constant(N, N + 2*G->GetEdges()));
-    for (TUNGraph::TNodeI NI = G->BegNI(); NI < G->EndNI(); NI++) {
-        int u = compIdx[NI.GetId()];
-        laplacian.insert(u, u) = NI.GetOutDeg();
-        for (int i = 0; i < NI.GetOutDeg(); i++) {
-            int v = compIdx[NI.GetOutNId(i)];
-            laplacian.insert(u, v) = -1; 
-        }
-    }
-    
-    SparseSymMatProd<double> op(laplacian);
-    SymEigsSolver<double, SMALLEST_MAGN, SparseSymMatProd<double> > eigs(&op, 3, N/3);
-
-    eigs.init();
-    eigs.compute();
-
-    if (eigs.info() != SUCCESSFUL) {
-        cout << "Could not compute eigenvectors.\n";
-        return;
-    }
-    
-    for (auto &e : compIdx)
-        spectral_embeddings[e.first] = make_pair(eigs.eigenvectors()(e.second, 1), eigs.eigenvectors()(e.second, 0));
-
-    //cout << eigs.eigenvalues() << endl;
-    //cout << eigs.eigenvectors() << endl;
-}
-*/
-
 void generateNode2vecEmbeddings(const string& filename) {
     node2vec_embeddings.clear();
     string embedding_file = getBase(filename) + ".emb";
@@ -231,47 +193,12 @@ void getRegressionWeights(const string& filename, bool isCitation, bool useNode2
     fin.close();
 }
 
-/*
-double getSpectralDist(int a, int b) {
-    pair<double, double> pa = spectral_embeddings[a];
-    pair<double, double> pb = spectral_embeddings[b];
-    return sqrt((pa.first - pb.first)*(pa.first - pb.first) + (pa.second - pb.second)*(pa.second - pb.second));
-}
-
-double getNode2VecL1Dist(int a, int b) {
-    double ret = 0.0;
-    vector<double>& pa = node2vec_embeddings[a];
-    vector<double>& pb = node2vec_embeddings[b];
-    for (size_t i = 0; i < pa.size(); i++)
-        ret += abs(pa[i] - pb[i]);
-    return ret;
-}
-*/
-
 double getNode2VecL2Dist(int a, int b) {
     double ret = 0.0;
     vector<double>& pa = node2vec_embeddings[a];
     vector<double>& pb = node2vec_embeddings[b];
     for (size_t i = 0; i < pa.size(); i++)
         ret += (pa[i] - pb[i])*(pa[i] - pb[i]);
-    return sqrt(ret);
-}
-
-/*
-double getNode2VecLInfDist(int a, int b) {
-    double ret = 0.0;
-    vector<double>& pa = node2vec_embeddings[a];
-    vector<double>& pb = node2vec_embeddings[b];
-    for (size_t i = 0; i < pa.size(); i++)
-        ret = max(ret, abs(pa[i] - pb[i]));
-    return ret;
-}
-*/
-
-double len(const map<int, double>& vec) {
-    double ret = 0.0;
-    for (auto it = vec.begin(); it != vec.end(); it++)
-        ret += it->second * it->second;
     return sqrt(ret);
 }
 
@@ -301,13 +228,19 @@ double cosineSimilarity(const vector<double>& a, const vector<double>& b) {
 
 double cosineSimilarity(map<int, double>& a, map<int, double>& b) {
     double dot = 0.0;
+    double lenA = 0.0;
+
     for (auto it = a.begin(); it != a.end(); it++) {
         int index = it->first;
         double valA = it->second;
         double valB = b[index];
         dot += valA * valB;
+        lenA += valA * valA;
     }
-    return dot / (len(a) * len(b));
+    double lenB = 0.0;
+    for (auto it = b.begin(); it != b.end(); it++)
+        lenB += it->second * it->second;
+    return dot / sqrt(lenA * lenB);
 }
 
 const int SIMILARITY_TFIDF = 0;
@@ -414,12 +347,12 @@ void getFeatureVector(PUNGraph& G, int cur, int dst, const set<int>& visited, ve
 
     feat.push_back(AVG_PATH_LEN);                        // 0. average shortest path length in G
     feat.push_back(similarityCache[cur][dst]);           // 1. similarity OR L2 distance of node2vec
-    feat.push_back(curNI.GetOutDeg());                   // 3. degree
-    feat.push_back(clusterCf[cur]);                      // 4. clustering coefficient
-    feat.push_back(visited.find(cur) == visited.end());  // 5. 1 if unvisited, 0 if visited
-    feat.push_back(fracVisited);                         // 6. fraction of visited neighbors
-    feat.push_back(pst(G, cur, dst));                    // 7. EVN Probability
-    feat.push_back(1);                                   // 8. constant term for linear regression
+    feat.push_back(curNI.GetOutDeg());                   // 2. degree
+    feat.push_back(clusterCf[cur]);                      // 3. clustering coefficient
+    feat.push_back(visited.find(cur) == visited.end());  // 4. 1 if unvisited, 0 if visited
+    feat.push_back(fracVisited);                         // 5. fraction of visited neighbors
+    feat.push_back(pst(G, cur, dst));                    // 6. EVN probability
+    feat.push_back(1);                                   // 7. constant term for linear regression
 }
 
 // Returns a random neighbor, or -1 if there are none.

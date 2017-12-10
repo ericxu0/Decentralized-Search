@@ -1,10 +1,6 @@
 #include "Snap.h"
-#include "spectra/SymEigsSolver.h"
-#include "spectra/MatOp/SparseSymMatProd.h"
 #include "strategies.cpp"
 #include <algorithm>
-#include <eigen3/Eigen/Core>
-#include <eigen3/Eigen/SparseCore>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -16,14 +12,13 @@
 #include <stdlib.h>
 
 using namespace std;
-using namespace Eigen;
-using namespace Spectra;
 
 const string GRAPH_EXTENSION = ".edges";
 const int NUM_TRIALS = 10000;
 const int TEST_SEED = 42;
 const int CAP = 100;
 const int BUCKETS[] = {3, 10, 30, 100};
+const bool PRINT_BUCKETS = false;
 
 // Returns the number of steps, or -1 if failure.
 int search(PUNGraph& G, int src, int dst, int (*getNextNode)(PUNGraph&, int, int, const set<int>&)) {
@@ -51,21 +46,22 @@ void displayResults(vector<int>& results) {
     int totalPathLength = accumulate(results.begin(), results.end(), 0);
     
     if (numSuccess == 0)
-        cout << "No successes\n";
+        cout << "  No successes\n";
     else
-        cout << "Success rate: " << 100.0 * numSuccess / NUM_TRIALS << "\%\nAverage path length: " << 1.0 * totalPathLength / numSuccess << "\n";
+        cout << "  Success rate: " << 100.0 * numSuccess / NUM_TRIALS << "\%\n  Average path length: " << 1.0 * totalPathLength / numSuccess << "\n";
 
-    for (int size : BUCKETS) {
-        int count = 0;
-        for (int val : results)
-            if (val <= size)
-                count++;
-        ios init(NULL);
-        init.copyfmt(cout);
-        cout << "Length <= " << setw(5) << size << ": " << fixed << setprecision(1) << setw(4) << 100.0 * count / NUM_TRIALS << "\%\n";
-        cout.copyfmt(init);
+    if (PRINT_BUCKETS) {
+        for (int size : BUCKETS) {
+            int count = 0;
+            for (int val : results)
+                if (val <= size)
+                    count++;
+            ios init(NULL);
+            init.copyfmt(cout);
+            cout << "  Length <= " << setw(5) << size << ": " << fixed << setprecision(1) << setw(4) << 100.0 * count / NUM_TRIALS << "\%\n";
+            cout.copyfmt(init);
+        }
     }
-
     cout << endl;
 }
 
@@ -105,8 +101,6 @@ void experiment(const string& filename, bool isCitation) {
     normalizeSimilarity(G, isCitation ? SIMILARITY_TFIDF : SIMILARITY_FEATURES);
     computeDiscretizedQ(G);
     getRegressionWeights(filename, isCitation, false);
-
-    IS_CITATION = isCitation;
 
     vector<pair<int, int> > samples;
     srand(TEST_SEED);
