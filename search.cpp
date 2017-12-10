@@ -20,10 +20,10 @@ using namespace Eigen;
 using namespace Spectra;
 
 const string GRAPH_EXTENSION = ".edges";
-const int NUM_TRIALS = 1000;
+const int NUM_TRIALS = 10000;
 const int SEED = 42;
 const int CAP = 100;
-const int BUCKETS[] = {10, 100};
+const int BUCKETS[] = {3, 10, 30, 100};
 
 // Returns the number of steps, or -1 if failure.
 int search(PUNGraph& G, int src, int dst, int (*getNextNode)(PUNGraph&, int, int, const set<int>&)) {
@@ -112,6 +112,7 @@ void experiment(const string& filename, bool isCitation) {
     cout << "# Nodes: " << G->GetNodes() << endl;
     cout << "# Edges: " << G->GetEdges() << endl;
     G = TSnap::GetMxWcc(G);
+    TSnap::DelSelfEdges(G);
     cout << "# Nodes (Max WCC): " << G->GetNodes() << endl;
     cout << "# Edges (Max WCC): " << G->GetEdges() << endl;
     cout << endl;

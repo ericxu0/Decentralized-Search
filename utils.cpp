@@ -269,11 +269,8 @@ void normalizeSimilarity(PUNGraph& G, bool isCitation) {
                 maxSim = max(maxSim, getSimilarity(NI1.GetId(), NI2.GetId(), isCitation));
 
     for (TUNGraph::TNodeI NI1 = G->BegNI(); NI1 < G->EndNI(); NI1++)
-        for (TUNGraph::TNodeI NI2 = G->BegNI(); NI2 < G->EndNI(); NI2++) {
-            int a = NI1.GetId();
-            int b = NI2.GetId();
-            similarityCache[a][b] /= maxSim;
-        }
+        for (TUNGraph::TNodeI NI2 = G->BegNI(); NI2 < G->EndNI(); NI2++)
+            similarityCache[NI1.GetId()][NI2.GetId()] /= maxSim;
 }
 
 const int CHUNKS = 100;
