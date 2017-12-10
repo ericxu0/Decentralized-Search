@@ -145,25 +145,11 @@ void getTrainingData(const string& filename, const string& graphName, bool isCit
 }
 
 int main() {
-
-    //getTrainingData("data/real/gplus/", dataFile);
-    //getTrainingData("data/real/twitter/", dataFile);
-
-    string directoryRoot =  "data/real/" + GRAPH_NAME + "/";
-    cout << directoryRoot << endl;
-    vector<string> allEdgeFiles = getAllFiles(directoryRoot, GRAPH_EXTENSION);
+    string facebookRoot = "data/real/facebook/";
+    vector<string> allEdgeFiles = getAllFiles(facebookRoot, GRAPH_EXTENSION);
     for(auto&& fileName : allEdgeFiles) {
-        cout << fileName << endl;
-        string fullFileName = directoryRoot + fileName;
-        if (WRITE_TO_FILE) {
-            ofstream dataFile;
-            string path = DATA_PREFIX + GRAPH_NAME + "_" + getBase(fileName) + ".txt";
-            dataFile.open(path);
-            getTrainingData(fullFileName, dataFile);
-            dataFile.close();
-            cout << "Wrote training data to file: " << path << endl;
-        }
-
+        string fullFileName = facebookRoot + fileName;
+        getTrainingData(fullFileName, "facebook-" + getBase(fileName), false);
     }
     getTrainingData("data/real/cit-HepTh/cit-HepTh-subset.edges", "cit-HepTh-subset", true);
 

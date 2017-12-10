@@ -109,13 +109,11 @@ void experiment(const string& filename, bool isCitation) {
     cout << "Random unvisited\n";
     simulate(G, samples, randomUnvisitedStrategy);
 
-
     cout << "Degree\n";
     simulate(G, samples, degreeStrategy);
 
     cout << "Similarity\n";
     simulate(G, samples, similarityStrategy);
-
 
     cout << "EVN (with similarity)\n";
     simulate(G, samples, evnStrategy);
@@ -150,32 +148,14 @@ void experiment(const string& filename, bool isCitation) {
 }
 
 int main() {
+    experiment("data/real/cit-HepTh/cit-HepTh-subset.edges", true);
 
-    // experiment("data/real/cit-HepTh/cit-HepTh-subset.edges", true);
-
-    fprintf(stderr, "Starting Search Algorithm\n");
-    //experiment("data/real/facebook_combined.txt");
-    //experiment("data/real/ca-HepTh.txt");
-    //experiment("data/real/cit-HepTh.txt");
-
-    // experiment("data/synthetic/gnm0.txt");
-    // experiment("data/synthetic/smallworld0.txt");
-    // experiment("data/synthetic/powerlaw0.txt");
-    // experiment("data/synthetic/prefattach0.txt");
-    
-    //experiment("data/synthetic/gnm_small0.txt");
-    //experiment("data/synthetic/smallworld_small0.txt");
-    //experiment("data/synthetic/powerlaw_small0.txt");
-    //experiment("data/synthetic/prefattach_small0.txt");
-    
-
-
-    string directoryRoot =  "data/real/" + GRAPH_NAME + "/";
-    vector<string> allEdgeFiles = getAllFiles(directoryRoot, GRAPH_EXTENSION);
+    string facebookRoot = "data/real/facebook/";
+    vector<string> allEdgeFiles = getAllFiles(facebookRoot, GRAPH_EXTENSION);
     for(auto&& fileName : allEdgeFiles) {
-        string fullFileName = directoryRoot + fileName;
-        experiment(fullFileName);
-
+        string fullFileName = facebookRoot + fileName;
+        //if (fileName == "0.edges")
+            experiment(fullFileName, false);
     }
 
     return 0;

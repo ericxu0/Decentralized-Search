@@ -46,27 +46,10 @@ for filePath in files:
     reg = Ridge(fit_intercept=False)
     reg.fit(trainX, trainY)
 
-
     name = filePath[len("training_data_") : filePath.rfind('.')]
     typeStr = str(type(reg))
     typeStr = typeStr[typeStr.rfind('.') + 1 : typeStr.rfind('\'')]
     outputPath = fileDir + typeStr + "_" + name + ".weights"
-
-    # linreg = LinearRegression(fit_intercept=False, normalize=False, copy_X=True, n_jobs=1)
-    # linreg = Lasso()
-    # linreg.fit(trainX, trainY)
-    # predictedY = linreg.predict(testX)
-
-    # def sizes(x, y):
-    #     c = Counter((x[i], y[i]) for i in range(len(x)))
-    #     return [c[(x[i], y[i])] ** 2 * 5 for i in range(len(x))]
-
-    # print "Linear regression"
-    # print "Score: " + str(linreg.score(testX, testY))
-    # idx = filePath[:filePath.rfind('_')].rfind('_')
-    # id_num = filePath[idx + 1:filePath.rfind('.')]
-    # outputPath = fileDir + "L1_" + id_num + ".weights"
-
     outputFile = open(outputPath, "w")
     outputFile.write(str(reg.coef_)[1:-1])
     outputFile.close()
