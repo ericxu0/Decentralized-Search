@@ -20,7 +20,7 @@ using namespace Spectra;
 
 const bool DEBUG = false;
 const bool WRITE_TO_FILE = true;
-const string DATA_FILENAME = "training_data_10k_0.txt";
+const string DATA_PREFIX = "data/training_data/training_data_10k_";
 
 const string GRAPH_EXTENSION = ".edges";
 
@@ -47,12 +47,10 @@ void getFeatureVector(PUNGraph& G, int cur, int dst, set<int>& visited, map<int,
     feat.push_back(visited.find(cur) == visited.end()); // 1 if unvisited, 0 if visited
     feat.push_back(visitedNeighbors);                   // number of visited neighbors
     feat.push_back(fracVisited);                        // fraction of visited neighbors
-    //feat.push_back(0);                                  // TODO: abs(v2[cur] - v2[dst]), where v2 is the 2nd eigenvector
-    //feat.push_back(0);                                  // TODO: ...
-    //feat.push_back(0);                                  // TODO: abs(v6[cur] - v6[dst])
-    //feat.push_back(0);                                  // TODO: something with node2vec
-    //feat.push_back(1);                                  // constant term for linear regression
-    feat.insert(feat.end(), node2vec_embeddings[cur].begin(), node2vec_embeddings[cur].end());
+    feat.push_back(getNode2VecL1Dist(cur, dst)); // L1 distance of node2vec
+    feat.push_back(getNode2VecL2Dist(cur, dst)); // L2 distance of node2vec
+    feat.push_back(getNode2VecLInfDist(cur, dst)); // LInfinity distance of node2vec
+    feat.push_back(1);                                  // constant term for linear regression
 }
 
 void performWalk(PUNGraph& G, map<int, int>& compIdx, vector<vector<int> >& minDist, int src, int dst, vector<int>& path) {
@@ -208,10 +206,6 @@ void getTrainingData(const string& filename, ofstream& dataFile) {
 }
 
 int main() {
-    ofstream dataFile;
-    if (WRITE_TO_FILE)
-        dataFile.open(DATA_FILENAME);
-
     //getTrainingData("data/real/gplus/", dataFile);
     //getTrainingData("data/real/twitter/", dataFile);
 
@@ -219,14 +213,15 @@ int main() {
     vector<string> allEdgeFiles = getAllFiles(facebookRoot, GRAPH_EXTENSION);
     for(auto&& fileName : allEdgeFiles) {
         string fullFileName = facebookRoot + fileName;
-        if (fileName.substr(0, 3) == "107")
-        //if (fileName.substr(0, 1) == "0")
+        if (WRITE_TO_FILE) {
+            ofstream dataFile;
+            string path = DATA_PREFIX + "facebook_" + getBase(fileName) + ".txt";
+            dataFile.open(path);
             getTrainingData(fullFileName, dataFile);
+            dataFile.close();
+            cout << "Wrote training data to file: " << path << endl;
+        }
     }
 
-    if (WRITE_TO_FILE) {
-        dataFile.close();
-        cout << "Wrote training data to file: " << DATA_FILENAME << endl;
-    }
     return 0;
 }

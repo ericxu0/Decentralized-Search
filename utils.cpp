@@ -21,6 +21,8 @@ namespace fs = ::boost::filesystem;
 map<int, pair<double, double> > spectral_embeddings;
 map<int, vector<double> > node2vec_embeddings;
 map<int, vector<int> > similarity_features;
+vector<double> l1RegWeights;
+vector<double> l2RegWeights;
 
 string getBase(string s) {
     int idx = s.size() - 1;
@@ -28,8 +30,6 @@ string getBase(string s) {
         idx--;
     return s.substr(0, idx);
 }
-
-
 
 // return the filenames of all files that have the specified extension
 // in the specified directory and all subdirectories
@@ -119,28 +119,31 @@ void generateSimilarityFeatures(const string& filename) {
     fin.close();
 }
 
+void getRegressionWeights(const string& filename) {
+    string base = getBase(filename);
+    int idx = base.size() - 1;
+    while (idx >= 0 && base[idx] != '/')
+        idx--;
+    string num = base.substr(idx + 1, base.size() - idx - 1);
+    string types[] = {"L1", "L2"};
+    for (string& cur : types) {
+        string path = "data/training_data/" + cur + "_facebook_" + num + ".weights";
+        ifstream fin(path);
+        double x;
+        while (fin >> x) {
+            if (cur == "L1")
+                l1RegWeights.push_back(x);
+            else
+                l2RegWeights.push_back(x);
+        }
+        fin.close();
+    }
+}
+
 double getSpectralDist(int a, int b) {
     pair<double, double> pa = spectral_embeddings[a];
     pair<double, double> pb = spectral_embeddings[b];
     return sqrt((pa.first - pb.first)*(pa.first - pb.first) + (pa.second - pb.second)*(pa.second - pb.second));
-}
-
-double getNode2VecDist(int a, int b) {
-    double ret = 0.0;
-    vector<double>& pa = node2vec_embeddings[a];
-    vector<double>& pb = node2vec_embeddings[b];
-    for (size_t i = 0; i < pa.size(); i++)
-        ret += (pa[i] - pb[i])*(pa[i] - pb[i]);
-    return sqrt(ret);
-}
-
-double getNode2VecDist(int a, int b) {
-    double ret = 0.0;
-    vector<double>& pa = node2vec_embeddings[a];
-    vector<double>& pb = node2vec_embeddings[b];
-    for (size_t i = 0; i < pa.size(); i++)
-        ret += (pa[i] - pb[i])*(pa[i] - pb[i]);
-    return sqrt(ret);
 }
 
 double getNode2VecL1Dist(int a, int b) {
@@ -149,6 +152,24 @@ double getNode2VecL1Dist(int a, int b) {
     vector<double>& pb = node2vec_embeddings[b];
     for (size_t i = 0; i < pa.size(); i++)
         ret += abs(pa[i] - pb[i]);
+    return ret;
+}
+
+double getNode2VecL2Dist(int a, int b) {
+    double ret = 0.0;
+    vector<double>& pa = node2vec_embeddings[a];
+    vector<double>& pb = node2vec_embeddings[b];
+    for (size_t i = 0; i < pa.size(); i++)
+        ret += (pa[i] - pb[i])*(pa[i] - pb[i]);
+    return sqrt(ret);
+}
+
+double getNode2VecLInfDist(int a, int b) {
+    double ret = 0.0;
+    vector<double>& pa = node2vec_embeddings[a];
+    vector<double>& pb = node2vec_embeddings[b];
+    for (size_t i = 0; i < pa.size(); i++)
+        ret = max(ret, abs(pa[i] - pb[i]));
     return ret;
 }
 

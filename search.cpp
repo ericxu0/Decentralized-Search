@@ -77,8 +77,8 @@ void simulate(PUNGraph& G, vector<pair<int, int> >& samples, int (*getNextNode)(
         if (dist != -1)
             results.push_back(dist);
     }
-    printf("Finished Simulation\n");
-    fflush(stdout);
+    //printf("Finished Simulation\n");
+    //fflush(stdout);
     displayResults(results);
 }
 
@@ -130,12 +130,12 @@ void experiment(const string& filename) {
     generateNode2vecEmbeddings(filename);
     similarity_features.clear();
     generateSimilarityFeatures(filename);
+    l1RegWeights.clear();
+    l2RegWeights.clear();
+    getRegressionWeights(filename);
 
     vector<pair<int, int> > samples;
     getSamples(G, samples);
-
-    cout << "Simulating degree strategy\n";
-    simulate(G, samples, degreeStrategy);
     
     cout << "Simulating random unvisited strategy\n";
     simulate(G, samples, randomUnvisitedStrategy);
@@ -143,14 +143,23 @@ void experiment(const string& filename) {
     cout << "Simulating random strategy\n";
     simulate(G, samples, randomStrategy);
 
+    cout << "Simulating degree strategy\n";
+    simulate(G, samples, degreeStrategy);
+
     cout << "Simulating random degree weighting strategy\n";
     simulate(G, samples, randomWeightedDegreeStrategy);
 
-    cout << "Simulating spectral embedding strategy\n";
-    simulate(G, samples, spectralStrategy);
+    //cout << "Simulating spectral embedding strategy\n";
+    //simulate(G, samples, spectralStrategy);
 
-    cout << "Simulating node2vec embedding strategy\n";
-    simulate(G, samples, node2vecStrategy);
+    cout << "Simulating node2vec L1 embedding strategy\n";
+    simulate(G, samples, node2vecL1Strategy);
+
+    cout << "Simulating node2vec L2 embedding strategy\n";
+    simulate(G, samples, node2vecL2Strategy);
+
+    cout << "Simulating node2vec LInf embedding strategy\n";
+    simulate(G, samples, node2vecLInfStrategy);
     
     cout << "Simulating similarity strategy\n";
     simulate(G, samples, similarityStrategy);
@@ -158,8 +167,11 @@ void experiment(const string& filename) {
     cout << "Simulating EVN\n";
     simulate(G, samples, EVNStrategy);
 
-    cout << "Simulating linear regression strategy\n";
-    simulate(G, samples, LinRegStrategy);
+    cout << "Simulating linear regression L1 strategy\n";
+    simulate(G, samples, LinRegL1Strategy);
+
+        cout << "Simulating linear regression L2 strategy\n";
+    simulate(G, samples, LinRegL2Strategy);
 
     // cout << "Simulating neural network strategy\n";
     // printf("Starting Strategy\n");
@@ -167,19 +179,16 @@ void experiment(const string& filename) {
 
     // simulate(G, samples, NeuralNetStrategy);
 
-
-    
-
     cout << "Optimal\n";
     optimal(G, samples);
-    
-    cout << endl;
 
     printf("Finished Experiment\n");
     fflush(stdout);
+    cout << endl;
 }
 
 int main() {
+    fprintf(stderr, "Starting Search Algorithm\n");
     //experiment("data/real/facebook_combined.txt");
     //experiment("data/real/ca-HepTh.txt");
     //experiment("data/real/cit-HepTh.txt");
@@ -195,14 +204,12 @@ int main() {
     //experiment("data/synthetic/prefattach_small0.txt");
     
     //experiment("data/real/facebook/0.edges");
-    fprintf(stderr, "Starting Search Algorithm\n");
-
 
     string facebookRoot = "data/real/facebook/";
     vector<string> allEdgeFiles = getAllFiles(facebookRoot, GRAPH_EXTENSION);
     for(auto&& fileName : allEdgeFiles) {
         string fullFileName = facebookRoot + fileName;
-        if (fileName.substr(0, 3) == "107")
+        if (fileName == "0.edges")
             experiment(fullFileName);
     }
 

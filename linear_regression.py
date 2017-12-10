@@ -3,8 +3,10 @@
 import matplotlib.pyplot as plot
 import random
 from collections import Counter
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, Lasso
 from sklearn.preprocessing import PolynomialFeatures
+from os import listdir
+from os.path import isfile, join
 
 TEST_AMOUNT = 0.2
 
@@ -18,44 +20,55 @@ trainY = []
 testX = []
 testY = []
 
-for line in open("training_data_10k_0.txt"):
-    split = line.split(", ")
+fileDir = "data/training_data/"
+files = [f for f in listdir(fileDir) if isfile(join(fileDir, f)) and f[-3:] == 'txt']
 
-    x = map(float, split[0].split(" "))
-    x = x[2:] # TODO: change this if data changes!!
+for filePath in files:
+    for line in open(fileDir + filePath):
+        split = line.split(", ")
 
-    trueLen = int(split[1])
-    randomWalkLen = float(split[2])
-    y = randomWalkLen # TODO: trueLen?
+        x = map(float, split[0].split(" "))
+        #x = x[2:] # TODO: change this if data changes!!
 
-    if trueLen <= 1:
-        continue # Meaningless to train if we're at the destination or 1 edge away
+        trueLen = int(split[1])
+        randomWalkLen = float(split[2])
+        y = randomWalkLen # TODO: trueLen?
 
-    if random.random() < TEST_AMOUNT:
-        testX.append(x)
-        testY.append(y)
-    else:
-        trainX.append(x)
-        trainY.append(y)
+        if trueLen <= 1:
+            continue # Meaningless to train if we're at the destination or 1 edge away
 
-if USE_POLY:
-    trainX = poly.fit_transform(trainX)
-    testX = poly.fit_transform(testX)
+        if random.random() < TEST_AMOUNT:
+            testX.append(x)
+            testY.append(y)
+        else:
+            trainX.append(x)
+            trainY.append(y)
 
-linreg = LinearRegression(fit_intercept=False, normalize=False, copy_X=True, n_jobs=1)
-linreg.fit(trainX, trainY)
-predictedY = linreg.predict(testX)
+    if USE_POLY:
+        trainX = poly.fit_transform(trainX)
+        testX = poly.fit_transform(testX)
 
-def sizes(x, y):
-    c = Counter((x[i], y[i]) for i in range(len(x)))
-    return [c[(x[i], y[i])] ** 2 * 5 for i in range(len(x))]
+    linreg = LinearRegression(fit_intercept=False, normalize=False, copy_X=True, n_jobs=1)
+    #linreg = Lasso()
+    linreg.fit(trainX, trainY)
+    predictedY = linreg.predict(testX)
 
-print "Linear regression"
-print "Score: " + str(linreg.score(testX, testY))
-print "Coef: " + str(linreg.coef_)
+    # def sizes(x, y):
+    #     c = Counter((x[i], y[i]) for i in range(len(x)))
+    #     return [c[(x[i], y[i])] ** 2 * 5 for i in range(len(x))]
 
-plot.scatter(testY, predictedY, s=sizes(testY, predictedY), marker='.', facecolor='none', edgecolor='b')
-plot.title("Actual vs. Predicted Path Lengths")
-plot.xlabel("Actual path length")
-plot.ylabel("Predicted path length")
-plot.show()
+    # print "Linear regression"
+    # print "Score: " + str(linreg.score(testX, testY))
+    idx = filePath[:filePath.rfind('_')].rfind('_')
+    id_num = filePath[idx + 1:filePath.rfind('.')]
+    outputPath = fileDir + "L2_" + id_num + ".weights"
+    outputFile = open(outputPath, "w")
+    outputFile.write(str(linreg.coef_)[1:-1])
+    outputFile.close()
+
+    # plot.scatter(testY, predictedY, s=sizes(testY, predictedY), marker='.', facecolor='none', edgecolor='b')
+    # plot.title("Actual vs. Predicted Path Lengths")
+    # plot.xlabel("Actual path length")
+    # plot.ylabel("Predicted path length")
+    # plot.show()
+
