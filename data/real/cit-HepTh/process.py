@@ -92,8 +92,8 @@ highlyCited = set(x for x in citationCount.keys() if citationCount[x] > 50)
 for x in graph.keys():
     if x not in highlyCited:
         del graph[x]
-    else:
-        graph[x] &= highlyCited
+for x in graph.keys():
+    graph[x] &= set(graph.keys())
 
 print "Nodes:", len(graph)
 print "Edges:", sum(len(s) for s in graph.values())
