@@ -4,5 +4,5 @@ spectral
 degree
 nodeEmbeddings
 gen_train_data
-
 model.pyc
+*.swp

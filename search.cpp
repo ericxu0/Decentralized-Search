@@ -22,8 +22,8 @@ using namespace Spectra;
 const string GRAPH_EXTENSION = ".edges";
 const int NUM_TRIALS = 1000;
 const int SEED = 42;
-const int CAP = 1000;
-const int BUCKETS[] = {10, 100, 1000};
+const int CAP = 100;
+const int BUCKETS[] = {10, 100};
 
 // Returns the number of steps, or -1 if failure.
 int search(PUNGraph& G, int src, int dst, int (*getNextNode)(PUNGraph&, int, int, const set<int>&)) {
@@ -72,13 +72,10 @@ void displayResults(vector<int>& results) {
 void simulate(PUNGraph& G, vector<pair<int, int> >& samples, int (*getNextNode)(PUNGraph&, int, int, const set<int>&)) {
     vector<int> results;
     for (size_t i = 0; i < samples.size(); i++) {
-        //fprintf(stderr, "On Sample %zu\n", i);
         int dist = search(G, samples[i].first, samples[i].second, getNextNode);
         if (dist != -1)
             results.push_back(dist);
     }
-    //printf("Finished Simulation\n");
-    //fflush(stdout);
     displayResults(results);
 }
 
@@ -134,71 +131,45 @@ void experiment(const string& filename, bool isCitation) {
     generateSimilarityFeatures(filename, isCitation);
     getRegressionWeights(filename, isCitation);
 
-    vector<pair<int, int> > samples;
-    getSamples(G, samples);
-
     IS_CITATION = isCitation;
     clearSimilarityCache();
     normalizeSimilarity(G, isCitation);
+    computeDiscretizedQ(G);
+
+    vector<pair<int, int> > samples;
+    getSamples(G, samples);
     
-    cout << "Simulating random unvisited strategy\n";
+    cout << "Random unvisited\n";
     simulate(G, samples, randomUnvisitedStrategy);
 
-    cout << "Simulating random strategy\n";
-    simulate(G, samples, randomStrategy);
-
-    cout << "Simulating degree strategy\n";
+    cout << "Degree\n";
     simulate(G, samples, degreeStrategy);
 
-    cout << "Simulating random degree weighting strategy\n";
-    simulate(G, samples, randomWeightedDegreeStrategy);
-
-    //cout << "Simulating spectral embedding strategy\n";
-    //simulate(G, samples, spectralStrategy);
-
-    cout << "Simulating node2vec L1 embedding strategy\n";
-    simulate(G, samples, node2vecL1Strategy);
-
-    cout << "Simulating node2vec L2 embedding strategy\n";
-    simulate(G, samples, node2vecL2Strategy);
-
-    cout << "Simulating node2vec LInf embedding strategy\n";
-    simulate(G, samples, node2vecLInfStrategy);
-    
-    cout << "Simulating similarity strategy\n";
+    cout << "Similarity\n";
     simulate(G, samples, similarityStrategy);
 
-    //cout << "Simulating EVN\n";
-    //simulate(G, samples, evnStrategy);
+    cout << "EVN (with similarity)\n";
+    simulate(G, samples, evnStrategy);
 
-    cout << "Simulating OLS strategy\n";
-    simulate(G, samples, olsStrategy);
+    cout << "Ridge regression (with similarity)\n";
+    simulate(G, samples, ridgeStrategy); // TODO: currently uses node2vec features?
 
-    cout << "Simulating Lasso strategy\n";
-    simulate(G, samples, lassoStrategy);
+    cout << "node2vec L_2\n";
+    simulate(G, samples, node2vecL2Strategy);
 
-    cout << "Simulating Elastic Net strategy\n";
-    simulate(G, samples, elasticNetStrategy);
+    cout << "EVN (with node2vec)\n";
+    // TODO
 
-    cout << "Simulating Ridge strategy\n";
-    simulate(G, samples, ridgeStrategy);
-
-    // cout << "Simulating neural network strategy\n";
-    // printf("Starting Strategy\n");
-    // fflush(stdout);
-
-    // simulate(G, samples, NeuralNetStrategy);
+    cout << "Ridge regression (with node2vec)\n";
+    // TODO
 
     cout << "Optimal\n";
     optimal(G, samples);
 
-    printf("Finished Experiment\n");
-    fflush(stdout);
     cout << endl;
 }
 
 int main() {
-    fprintf(stderr, "Starting Search Algorithm\n");
     //experiment("data/real/facebook_combined.txt");
     //experiment("data/real/ca-HepTh.txt");
     //experiment("data/real/cit-HepTh.txt");
@@ -219,8 +190,8 @@ int main() {
     vector<string> allEdgeFiles = getAllFiles(facebookRoot, GRAPH_EXTENSION);
     for(auto&& fileName : allEdgeFiles) {
         string fullFileName = facebookRoot + fileName;
-//        if (fileName == "0.edges")
-//            experiment(fullFileName, false);
+        if (fileName == "0.edges")
+            experiment(fullFileName, false);
     }
 
     experiment("data/real/cit-HepTh/cit-HepTh-subset.edges", true);

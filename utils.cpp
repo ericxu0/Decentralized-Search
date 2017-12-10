@@ -225,7 +225,7 @@ void clearSimilarityCache() {
 }
 
 double getSimilarity(int a, int b, bool isCitation) {
-    if (b > a) {
+    if (b < a) {
         swap(a, b);
     }
 
@@ -257,7 +257,7 @@ double getSimilarity(int a, int b, bool isCitation) {
             cnt += similarity_features[a][i] == 1 && similarity_features[b][i] == 1;
         result = cnt; // TODO: normalize?
     }
-    similarityCache[a][b] = result;
+    similarityCache[a][b] = similarityCache[b][a] = result;
     return result;
 }
 
@@ -265,16 +265,52 @@ void normalizeSimilarity(PUNGraph& G, bool isCitation) {
     double maxSim = 0;
     for (TUNGraph::TNodeI NI1 = G->BegNI(); NI1 < G->EndNI(); NI1++)
         for (TUNGraph::TNodeI NI2 = G->BegNI(); NI2 < G->EndNI(); NI2++)
-            maxSim = max(maxSim, getSimilarity(NI1.GetId(), NI2.GetId(), isCitation));
+            if (NI1.GetId() != NI2.GetId())
+                maxSim = max(maxSim, getSimilarity(NI1.GetId(), NI2.GetId(), isCitation));
 
     for (TUNGraph::TNodeI NI1 = G->BegNI(); NI1 < G->EndNI(); NI1++)
         for (TUNGraph::TNodeI NI2 = G->BegNI(); NI2 < G->EndNI(); NI2++) {
             int a = NI1.GetId();
             int b = NI2.GetId();
-            if (a >= b) {
-                similarityCache[a][b] /= maxSim;
-            }
+            similarityCache[a][b] /= maxSim;
         }
+}
+
+const int CHUNKS = 100;
+double discretizedQ[CHUNKS + 1];
+
+void computeDiscretizedQ(PUNGraph& G) {
+    // compute all pairwise similarity
+    int counts[CHUNKS + 1];
+    fill(counts, counts + CHUNKS + 1, 0);
+    fill(discretizedQ, discretizedQ + CHUNKS + 1, 0);
+    for (TUNGraph::TNodeI NI1 = G->BegNI(); NI1 < G->EndNI(); NI1++) {
+        for (TUNGraph::TNodeI NI2 = G->BegNI(); NI2 < G->EndNI(); NI2++) {
+            int a = NI1.GetId();
+            int b = NI2.GetId();
+            double sim = similarityCache[a][b];
+            assert(sim >= 0.0 && sim <= 1.0);
+            int index = (int) (sim * CHUNKS);
+            if (G->IsEdge(a, b))
+                discretizedQ[index] += 1;
+            counts[index]++;
+        }
+    }
+    for (int i = 0; i <= CHUNKS; i++) {
+        if (counts[i] > 0)
+            discretizedQ[i] /= counts[i];
+        else
+            discretizedQ[i] = -1.0;
+    }
+}
+
+double qst(double sim) {
+    return discretizedQ[(int) (sim * CHUNKS)];
+}
+
+// requires calling computeDiscretizedQ() beforehand, which requires calling normalizeSimilarity() before that
+double pst(PUNGraph& G, int src, int target) {
+    return 1.0 - pow(1.0 - qst(similarityCache[src][target]), G->GetNI(src).GetOutDeg());
 }
 
 double computeShortestPath(PUNGraph& G, map<int, int>& compIdx, vector<vector<int> >& minDist) {
