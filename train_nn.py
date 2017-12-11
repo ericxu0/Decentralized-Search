@@ -17,14 +17,14 @@ import time
 
 from model import Model
 
-NUM_ENTRIES = 100000
-NUM_TRAIN = 90000
+NUM_ENTRIES = 10000
+NUM_TRAIN = 9000
 NUM_VALIDATE = NUM_ENTRIES - NUM_TRAIN
 BATCH_SIZE = 1
-EPOCHS = [(100, 5e-4)]
+EPOCHS = [(50, 5e-4)]
 RESTORE = False
 PERFORM_TRAIN = True
-TRAIN = "data/training_data/training_data_facebook-all_n2v.txt"
+TRAIN = "data/training_data/training_data_cit-HepTh-subset_sim.txt"
 logFile = open("log.txt", "w")
 
 def get_dataset():
@@ -101,7 +101,7 @@ def train(sess, model, saver):
             cur_loss = run_epoch(model, sess, testX, testY, False, lr)
             if best_loss > cur_loss:
                 print "better loss found, saving weights"
-                saver.save(sess, 'model6.weights')
+                saver.save(sess, 'citsim.weights')
                 best_loss = cur_loss
             epoch += 1
     print "Best Loss:", best_loss

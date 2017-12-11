@@ -1,2 +1,2 @@
-model_checkpoint_path: "model6.weights"
-all_model_checkpoint_paths: "model6.weights"
+model_checkpoint_path: "citsim.weights"
+all_model_checkpoint_paths: "citsim.weights"
