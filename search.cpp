@@ -44,10 +44,10 @@ int search(PUNGraph& G, int src, int dst, int (*getNextNode)(PUNGraph&, int, int
 }
 
 void displayResults(vector<int>& results) {
-    for (int len : results) {
-        path_data << len << " ";
-    }
-    path_data << "\n";
+    // for (int len : results) {
+    //     path_data << len << " ";
+    // }
+    // path_data << "\n";
 
     int numSuccess = results.size();
     int totalPathLength = accumulate(results.begin(), results.end(), 0);
@@ -166,6 +166,12 @@ void experiment(const string& filename, bool isCitation) {
 
 int main() {
     path_data.open("path_lengths.txt");
+
+    // experiment("data/synthetic/gnm0.txt", false);
+    // experiment("data/synthetic/smallworld0.txt", false);
+    // experiment("data/synthetic/powerlaw0.txt", false);
+    // experiment("data/synthetic/prefattach0.txt", false);
+
     experiment("data/real/cit-HepTh/cit-HepTh-subset.edges", true);
 
     string facebookRoot = "data/real/facebook/";

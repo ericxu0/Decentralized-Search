@@ -6,8 +6,8 @@ using namespace std;
 const int SEED = 42;
 const int NUM = 3;
 
-const int V = 10000;       // Vertices
-const int E = 100000;      // Edges for Gnm
+const int V = 1000;       // Vertices
+const int E = 10000;      // Edges for Gnm
 const int Vsmall = 100;       // Vertices
 const int Esmall = 1000;      // Edges for Gnm
 const double EXP = 2.6;         // Power law exponent
