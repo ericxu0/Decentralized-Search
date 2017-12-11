@@ -37,7 +37,7 @@ int ridgeStrategy(PUNGraph& G, int cur, int dst, const set<int>& visited) {
     for (int i = 0; i < NI.GetOutDeg(); i++) {
         int nxt = NI.GetOutNId(i);
         if (visited.find(nxt) != visited.end())
-            continue;
+           continue;
         double nxtVal = predictPathLength(G, nxt, dst, visited, false);
         if (nxtVal < bestVal) {
             bestVal = nxtVal;
@@ -59,7 +59,7 @@ int overallRidgeStrategy(PUNGraph& G, int cur, int dst, const set<int>& visited)
     for (int i = 0; i < NI.GetOutDeg(); i++) {
         int nxt = NI.GetOutNId(i);
         if (visited.find(nxt) != visited.end())
-            continue;
+           continue;
         double nxtVal = predictPathLength(G, nxt, dst, visited, true);
         if (nxtVal < bestVal) {
             bestVal = nxtVal;

@@ -307,8 +307,10 @@ void normalizeSimilarity(PUNGraph& G, int similarityMethod) {
         for (TUNGraph::TNodeI NI2 = G->BegNI(); NI2 < G->EndNI(); NI2++) {
             int a = NI1.GetId();
             int b = NI2.GetId();
-            similarityCache[a][b] = (similarityCache[a][b] - minSim) / (maxSim - minSim);
-            assert(similarityCache[a][b] >= 0.0 && similarityCache[a][b] <= 1.0);
+            if (a != b) {
+                similarityCache[a][b] = (similarityCache[a][b] - minSim) / (maxSim - minSim);
+                assert(similarityCache[a][b] >= 0.0 && similarityCache[a][b] <= 1.0);
+            }
         }
     }
 }
