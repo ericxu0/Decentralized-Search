@@ -35,23 +35,23 @@ def getDataPointsToPlot(Graph):
 
 def plotGraphs():
     
-    facebookNet = snap.LoadEdgeList(snap.PUNGraph, "data/real/facebook_combined.txt", 0, 1)
-    collabNet = snap.LoadEdgeList(snap.PUNGraph, "data/real/ca-HepTh.txt", 0, 1)
-    citationNet = snap.LoadEdgeList(snap.PUNGraph, "data/real/cit-HepTh.txt", 0, 1)
+    # facebookNet = snap.LoadEdgeList(snap.PUNGraph, "data/real/facebook_combined.txt", 0, 1)
+    # collabNet = snap.LoadEdgeList(snap.PUNGraph, "data/real/ca-HepTh.txt", 0, 1)
+    # citationNet = snap.LoadEdgeList(snap.PUNGraph, "data/real/cit-HepTh.txt", 0, 1)
 
     erdosRenyi = snap.LoadEdgeList(snap.PUNGraph, "data/synthetic/gnm0.txt", 0, 1)
     smallWorld = snap.LoadEdgeList(snap.PUNGraph, "data/synthetic/smallworld0.txt", 0, 1)
     powerLaw = snap.LoadEdgeList(snap.PUNGraph, "data/synthetic/powerlaw0.txt", 0, 1)
     prefAttachment = snap.LoadEdgeList(snap.PUNGraph, "data/synthetic/prefattach0.txt", 0, 1)
 
-    x_facebook, y_facebook = getDataPointsToPlot(facebookNet)
-    plt.loglog(x_facebook, y_facebook, color = 'y', label = 'Facebook Network')
+    # x_facebook, y_facebook = getDataPointsToPlot(facebookNet)
+    # plt.loglog(x_facebook, y_facebook, color = 'y', label = 'Facebook Network')
 
-    x_collab, y_collab = getDataPointsToPlot(collabNet)
-    plt.loglog(x_collab, y_collab, color = 'g', label = 'Collaboration Network')
+    # x_collab, y_collab = getDataPointsToPlot(collabNet)
+    # plt.loglog(x_collab, y_collab, color = 'g', label = 'Collaboration Network')
 
-    x_citation, y_citation = getDataPointsToPlot(citationNet)
-    plt.loglog(x_citation, y_citation, color = 'b', label = 'Citation Network')
+    # x_citation, y_citation = getDataPointsToPlot(citationNet)
+    # plt.loglog(x_citation, y_citation, color = 'b', label = 'Citation Network')
 
     x_erdos, y_erdos = getDataPointsToPlot(erdosRenyi)
     plt.loglog(x_erdos, y_erdos, color = 'r', label = 'Erdos Renyi Network')
@@ -70,6 +70,6 @@ def plotGraphs():
     plt.ylabel('Proportion of Nodes with a Given Degree (log)')
     plt.title('Degree Distribution')
     plt.legend()
-    plt.show()
+    plt.savefig('plots/degree_distribution.png')
 
 plotGraphs()
